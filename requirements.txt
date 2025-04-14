@@ -1,0 +1,5 @@
+berserk # Lichess API wrapper
+chess.com # Chess.com API wrapper
+customtkinter # CustomTkinter for GUI
+python-chess # Chess library for Python
+stockfish # Interaction with engine
