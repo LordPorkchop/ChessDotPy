@@ -111,6 +111,9 @@ class ChessBoard:
 
                 self.canvas.create_image(
                     piece_x, piece_y, image=img_ctk, tags="piece")
+        
+    def getFEN(self):
+        return self.board.fen()
 
 if __name__ == "__main__":
     root = CTk()
