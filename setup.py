@@ -10,13 +10,16 @@ def get_version():
                 return line.split("=")[1].strip().strip('"')
     raise RuntimeError("Unable to find version string.")
 
+
 # Read dependencies from requirements.txt
-
-
 def parse_requirements():
     with open("requirements.txt") as f:
         return f.read().splitlines()
 
+root = os.path.dirname(os.path.abspath(__file__))
+os.path.makedirs(f'{root}/saves', exist_ok=True)  # Ensure the game save directory exists
+os.path.makedirs(f'{root}/assets', exist_ok=True) # Ensure the asset directory exists
+os.path.makedirs(f'{root}/engine', exist_ok=True) # Ensure the stockfish directory exists
 
 setup(
     name="chessdotpy",  # Replace with your package name
