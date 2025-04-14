@@ -25,10 +25,8 @@ setup(
     name="chessdotpy",  # Replace with your package name
     version=get_version(),  # Dynamically get the version from version.py
     author="Lord Porkchop",  # Replace with your name
-    # Short description of your package
-    description="Chess in Python, featuring Stockfish and chess.com / Lichess API support",
-    long_description=open('README.md').read(),  # If you have a README.md
-    # Assuming you use markdown for README
+    description="Chess in Python, featuring Stockfish and chess.com / Lichess API support",  # Short description of your package
+    long_description=open('README.md').read(),  # Read the long description from README.md
     long_description_content_type="text/markdown",
     url="https://github.com/LordPorkchop/chessdotpy",  # GitHub URL
     packages=find_packages(),  # Automatically find all packages
