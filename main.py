@@ -52,7 +52,6 @@ class ChessBoard:
             self.canvas.pack()
         else:
             self.shown = False
-        self.__draw_board()
     
     def __fetch_img_assets(self):
         piece_img_paths = {}
@@ -88,7 +87,7 @@ class ChessBoard:
                         97 + col).upper(), anchor="se", font=("Arial", 8, "bold"), fill=text_color)
                 if col == 0:
                     self.canvas.create_text(
-                        x1 + 3, y1 + 3, text=str(8 - row), anchor="nw", font=("Arial", 8, "bold"), fill=text_color)
+                        x1 + 3, y1 + 3, text=self.rows[row], anchor="nw", font=("Arial", 8, "bold"), fill=text_color)
 
         board_lines = str(self.board).splitlines()
         for row, line in enumerate(board_lines):
@@ -116,4 +115,5 @@ class ChessBoard:
 if __name__ == "__main__":
     root = CTk()
     board = ChessBoard(root, asset_location="assets", tile_size=60, start_flipped=False, show=True)
+    board.draw()
     root.mainloop()
