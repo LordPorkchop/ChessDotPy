@@ -3,5 +3,5 @@ chess.com # Chess.com API wrapper
 customtkinter # CustomTkinter for GUI
 pillow # Pillow for image processing
 pygame # Pygame for sounds
-python-chess # Chess library for Python
+chess # Chess library for Python
 stockfish # Interaction with engine
