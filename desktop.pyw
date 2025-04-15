@@ -6,7 +6,8 @@ def create_shortcut():
     # Define paths
     target = os.path.abspath('./main.py')
     icon = os.path.abspath('./assets/icon.ico')
-    shortcut_path = os.path.join(os.path.expanduser("~"), "Desktop")
+    shortcut_path = os.path.join(
+        os.path.expanduser("~"), "Desktop", "ChessDotPy.lnk")
 
     # Create shortcut
     shell = Dispatch('WScript.Shell')
@@ -14,6 +15,7 @@ def create_shortcut():
     shortcut.TargetPath = target
     shortcut.WorkingDirectory = os.path.dirname(target)
     shortcut.IconLocation = icon
+    shortcut.WindowStyle = 7  # 7 = Minimized window
     shortcut.Save()
 
 
