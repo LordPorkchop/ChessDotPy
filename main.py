@@ -267,14 +267,14 @@ def main():
     set_default_color_theme("green")
     root.title("Chess.py")
     root.iconbitmap("assets/icon.ico")
-    root.geometry("480x480")
+    root.geometry("480x550")
     root.resizable(True, True)
 
     board = ChessBoard(root, asset_location="assets",
                        tile_size=60, start_flipped=False, show=True)
     board.draw()
 
-    btn = CTkButton(root, text="Flip",
+    btn = CTkButton(root, text="Flip Board",
                     command=lambda: board.flip(draw_immediate=True))
     btn.pack(pady=10)
     root.mainloop()
