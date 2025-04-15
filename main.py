@@ -156,14 +156,8 @@ class ChessBoard:
                 piece_x = (0.5 * self.tile_size) + col * self.tile_size
                 piece_y = (0.5 * self.tile_size) + row * self.tile_size
 
-                img_raw = Image.open(self.piece_img_paths[cell])
-                img_rsz = img_raw.resize((self.tile_size, self.tile_size))
-                img_ctk = ImageTk.PhotoImage(img_rsz)
-                # Prevent garbage collection
-                self.piece_imgs[f"{row},{col}"] = img_ctk
-
                 self.canvas.create_image(
-                    piece_x, piece_y, image=img_ctk, tags="piece")
+                    piece_x, piece_y, image=self.piece_imgs[cell], tags="piece")
 
     def move(self, move: str) -> None:
         """Moves a piece on the chessboard.
