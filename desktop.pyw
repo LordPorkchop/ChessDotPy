@@ -19,4 +19,3 @@ def create_shortcut():
 
 if __name__ == "__main__":
     create_shortcut()
-    print("Shortcut created on desktop.")
