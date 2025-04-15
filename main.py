@@ -20,7 +20,8 @@ class ChessBoard:
         start_flipped: bool = False,
         white_hex: str = "#ffcf9f",
         black_hex: str = "#d28c45",
-        show: bool = True
+        show: bool = True,
+        draw_immediate: bool = False,
     ):
         self.root = root
         self.canvas = CTkCanvas(
@@ -45,20 +46,19 @@ class ChessBoard:
         self.pieces = ["K", "Q", "R", "N", "B", "P"]
         self.colors = ["W", "B"]
 
-        self.piece_img_paths = self.__fetch_img_assets()
-        self.piece_imgs = {}
+        self.piece_imgs = self.__fetch_img_assets()
 
         self.board_rects = {}
 
+        self._flipped = False
         if start_flipped:
-            self.flip()
-            self._flipped = True
-        else:
-            self._flipped = False
+            self.flip(draw_immediate=False)
 
         if show:
             self.shown = True
             self.canvas.pack()
+            if draw_immediate:
+                self.draw()
         else:
             self.shown = False
 
@@ -75,7 +75,7 @@ class ChessBoard:
         for color in self.colors:
             for piece in self.pieces:
                 piece_img_paths[f"{color}{piece}"] = os.path.join(
-                    self.assets_path, f"pieces/{color}{piece}.png")
+                    self.assets_path, "pieces", f"{color}{piece}.png")
 
         pieces = {}
         for piece in piece_img_paths.values():
@@ -83,7 +83,7 @@ class ChessBoard:
                 raise FileNotFoundError(
                     f"Piece image '{piece}' does not exist.")
             else:
-                piece_name = piece.split(".")[0].upper()
+                piece_name = piece.split(".")[0].split("\\")[-1].upper()
                 img_raw = Image.open(piece)
                 img_rsz = img_raw.resize((self.tile_size, self.tile_size))
                 img_ctk = ImageTk.PhotoImage(img_rsz)
@@ -97,13 +97,13 @@ class ChessBoard:
         self.rows.reverse()
         self.cols.reverse()
         self.board.apply_transform(chess.flip_vertical)
+        self.board.apply_transform(chess.flip_horizontal)
         if draw_immediate:
             self.draw()
 
     def draw(self):
         """Draws the chessboard and pieces on the canvas."""
         self.canvas.delete("all")
-        self.piece_imgs.clear()
         for row in range(8):
             for col in range(8):
                 color = self._colors[(row + col) % 2]
@@ -136,14 +136,8 @@ class ChessBoard:
                 piece_x = (0.5 * self.tile_size) + col * self.tile_size
                 piece_y = (0.5 * self.tile_size) + row * self.tile_size
 
-                img_raw = Image.open(self.piece_img_paths[cell])
-                img_rsz = img_raw.resize((self.tile_size, self.tile_size))
-                img_ctk = ImageTk.PhotoImage(img_rsz)
-                # Prevent garbage collection
-                self.piece_imgs[f"{row},{col}"] = img_ctk
-
                 self.canvas.create_image(
-                    piece_x, piece_y, image=img_ctk, tags="piece")
+                    piece_x, piece_y, image=self.piece_imgs[cell], tags="piece")
 
     def update(self) -> None:
         """Updates the chessboard with the current state of the pieces."""
@@ -175,7 +169,7 @@ class ChessBoard:
         """Moves a piece on the chessboard.
 
         Args:
-            move (str): The move in UCI format (e.g., "e2e4").
+            move (str): The move in UCI format, e.g., "e2e4" (represents e4 in SAN).
         """
         try:
             chess_move = chess.Move.from_uci(move)
@@ -186,6 +180,19 @@ class ChessBoard:
                 raise IllegalMoveError(f"Illegal move: {move}")
         except Exception as e:
             print(f"Error: {e}")
+
+    def show(self) -> None:
+        """Shows the chessboard."""
+        if not self.shown:
+            self.canvas.pack()
+            self.shown = True
+            self.draw()
+
+    def hide(self) -> None:
+        """Hides the chessboard."""
+        if self.shown:
+            self.canvas.pack_forget()
+            self.shown = False
 
     def is_check(self) -> bool:
         """Checks if the game is in check.
@@ -259,9 +266,25 @@ class ChessBoard:
         return "W" if self.board.turn else "B"
 
 
-if __name__ == "__main__":
+def main():
+    """Main function to run the chessboard application."""
     root = CTk()
+    set_appearance_mode("system")
+    set_default_color_theme("green")
+    root.title("Chess.py")
+    root.iconbitmap("assets/icon.ico")
+    root.geometry("480x480")
+    root.resizable(True, True)
+
     board = ChessBoard(root, asset_location="assets",
                        tile_size=60, start_flipped=False, show=True)
     board.draw()
+
+    btn = CTkButton(root, text="Flip",
+                    command=lambda: board.flip(draw_immediate=True))
+    btn.pack(pady=10)
     root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
