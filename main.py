@@ -2,7 +2,13 @@ import os
 import chess
 from customtkinter import *
 from itertools import product
+from typing import Dict
 from PIL import Image, ImageTk
+
+
+class IllegalMoveError(Exception):
+    """Custom exception for illegal moves."""
+    pass
 
 class ChessBoard:
     def __init__(
@@ -53,22 +59,45 @@ class ChessBoard:
         else:
             self.shown = False
     
-    def __fetch_img_assets(self):
+    def __fetch_img_assets(self) -> Dict[str, ImageTk.PhotoImage]:
+        """Fetches the image assets for the chess pieces.
+
+        Raises:
+            FileNotFoundError: If one or multiple image files do not exist.
+
+        Returns:
+            Dict[str, ImageTk.PhotoImage]: A dictionary mapping piece names to their corresponding image objects.
+        """
         piece_img_paths = {}
         for color in self.colors:
             for piece in self.pieces:
                 piece_img_paths[f"{color}{piece}"] = os.path.join(
                     self.assets_path, f"pieces/{color}{piece}.png")
-        return piece_img_paths
+        
+        pieces = {}
+        for piece in piece_img_paths.values():
+            if not os.path.exists(piece):
+                raise FileNotFoundError(f"Piece image '{piece}' does not exist.")
+            else:
+                piece_name = piece.split(".")[0].upper()
+                img_raw = Image.open(piece)
+                img_rsz = img_raw.resize((self.tile_size, self.tile_size))
+                img_ctk = ImageTk.PhotoImage(img_rsz)
+                pieces[piece_name] = img_ctk
+                
+        return pieces
     
-    def flip(self):
+    def flip(self, draw_immediate:bool = False) -> None:
+        """Flips the chessboard vertically."""
         self._flipped = not self._flipped
         self.rows.reverse()
         self.cols.reverse()
         self.board.apply_transform(chess.flip_vertical)
-        self.draw()
+        if draw_immediate:
+            self.draw()
 
     def draw(self):
+        """Draws the chessboard and pieces on the canvas."""
         self.canvas.delete("all")
         self.piece_imgs.clear()
         for row in range(8):
@@ -83,8 +112,7 @@ class ChessBoard:
 
                 text_color = self._white if color == self._black else self._black
                 if row == 7:
-                    self.canvas.create_text(x1 + self.tile_size - 1, y1 + self.tile_size - 1, text=chr(
-                        97 + col).upper(), anchor="se", font=("Arial", 8, "bold"), fill=text_color)
+                    self.canvas.create_text(x1 + self.tile_size - 1, y1 + self.tile_size - 1, text=self.cols[col], anchor="se", font=("Arial", 8, "bold"), fill=text_color)
                 if col == 0:
                     self.canvas.create_text(
                         x1 + 3, y1 + 3, text=self.rows[row], anchor="nw", font=("Arial", 8, "bold"), fill=text_color)
@@ -109,11 +137,119 @@ class ChessBoard:
                 # Prevent garbage collection
                 self.piece_imgs[f"{row},{col}"] = img_ctk
 
-                self.canvas.create_image(
-                    piece_x, piece_y, image=img_ctk, tags="piece")
+                self.canvas.create_image(piece_x, piece_y, image=img_ctk, tags="piece")
+    
+    def update(self) -> None:
+        """Updates the chessboard with the current state of the pieces."""
+        self.canvas.delete("piece")
+        board_lines = str(self.board).splitlines()
+        for row, line in enumerate(board_lines):
+            line = line.replace(" ", "")
+            for col, cell in enumerate(line):
+                if (not cell) or cell == " " or cell == ".":
+                    continue
+                if cell.isupper():
+                    cell = "W" + cell
+                else:
+                    cell = "B" + cell.upper()
+
+                piece_x = (0.5 * self.tile_size) + col * self.tile_size
+                piece_y = (0.5 * self.tile_size) + row * self.tile_size
+
+                img_raw = Image.open(self.piece_img_paths[cell])
+                img_rsz = img_raw.resize((self.tile_size, self.tile_size))
+                img_ctk = ImageTk.PhotoImage(img_rsz)
+                # Prevent garbage collection
+                self.piece_imgs[f"{row},{col}"] = img_ctk
+
+                self.canvas.create_image(piece_x, piece_y, image=img_ctk, tags="piece")
+    
+    def move(self, move: str) -> None:
+        """Moves a piece on the chessboard.
+
+        Args:
+            move (str): The move in UCI format (e.g., "e2e4").
+        """
+        try:
+            chess_move = chess.Move.from_uci(move)
+            if chess_move in self.board.legal_moves:
+                self.board.push(chess_move)
+                self.update()
+            else:
+                raise ValueError(f"Illegal move: {move}")
+        except Exception as e:
+            print(f"Error: {e}")
+    
+    def is_check(self) -> bool:
+        """Checks if the game is in check.
+
+        Returns:
+            bool: True if the game is in check, False otherwise.
+        """
+        return self.board.is_check()
+    
+    def is_checkmate(self) -> bool:
+        """Checks if the game is in checkmate.
+
+        Returns:
+            bool: True if the game is in checkmate, False otherwise.
+        """
+        return self.board.is_checkmate()
+    
+    def is_stalemate(self) -> bool:
+        """Checks if the game is in stalemate.
+
+        Returns:
+            bool: True if the game is in stalemate, False otherwise.
+        """
+        return self.board.is_stalemate()
+    
+    def is_draw(self) -> bool:
+        """Checks if the game is a draw.
+
+        Returns:
+            bool: True if the game is a draw, False otherwise.
+        """
+        return self.board.is_draw()    
+    
+    def is_over(self) -> bool:
+        """Checks if the game is over.
+
+        Returns:
+            bool: True if the game is over, False otherwise.
+        """
+        return self.board.is_game_over()
+    
+    def get_board(self) -> chess.Board:
+        """Returns the current board.
+
+        Returns:
+            chess.Board: The current chess board.
+        """
+        return self.board
+
+    def get_board_str(self) -> str:
+        """Returns the current board as a string.
+
+        Returns:
+            str: The current board as a string.
+        """
+        return str(self.board)
         
-    def getFEN(self):
+    def getFEN(self) -> str:
+        """Returns the current FEN of the board.
+
+        Returns:
+            str: The current FEN of the board.
+        """
         return self.board.fen()
+    
+    def getTurn(self) -> str:
+        """Returns the current turn of the board.
+        Returns:
+            str: Either "W" or "B" depending on the current turn.
+        """
+        return "W" if self.board.turn else "B"
 
 if __name__ == "__main__":
     root = CTk()
