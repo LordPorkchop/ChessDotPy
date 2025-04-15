@@ -10,4 +10,5 @@ pygame # Pygame for sounds
 pywin32 # Windows-specific modules for file operations
 requests # HTTP requests for API calls
 stockfish # Interaction with engine
+tkinter # Tkinter for MessageBox
 typing # Type hinting

@@ -1,7 +1,9 @@
+from operator import iconcat
 import os
 import platform
 import requests as r
 from debug import *
+from tkinter import messagebox
 from subprocess import run, DEVNULL
 
 
@@ -155,9 +157,15 @@ if not os.path.exists(os.path.join(root, "CITATION.cff")):
         f"The citation file does not exist, likely indicating a non-official installation. Please install ChessDotPy for free from the official GitHub repository: {frmt.MAG}https://github.com/LordPorkchop/chessdotpy {frmt.RST}")
     exit(1)
 
+createShortcut = messagebox.askyesno(title="Chess.py Setup Complete",
+                                     message="Chess.py setup is complete. Do you want to create a shortcut on your desktop?",
+                                     icon=messagebox.INFO,
+                                     type=messagebox.YESNO)
+if createShortcut:
+    log("Creating shortcut on desktop...")
+    try:
+        run("python desktop.pyw", check=True)
+    except Exception as e:
+        error(f"Failed to create shortcut: {e}")
+
 log(frmt.SUC + "ChessDotPy Setup complete" + frmt.RST)
-print()
-log("You can now run ChessDotPy by double-clicking main.py")
-log(
-    f"If you want to create a desktop icon, please run {frmt.MAG}desktop.pyw{frmt.RST}")
-input("\nPress Enter to close...")
