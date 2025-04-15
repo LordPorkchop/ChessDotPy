@@ -1,6 +1,6 @@
 berserk # Lichess API wrapper
 chess # Chess library for Python
-chess.com # Chess.com API wrapper
+chessdotcom # Chess.com API wrapper
 customtkinter # CustomTkinter for GUI
 itertools # Itertools for list multiplication
 typing # Type hinting

@@ -1,9 +1,13 @@
 import os
-os.system('pip install setuptools')  # Ensure setuptools is installed
-from setuptools import setup, find_packages
+from debug import *
+from subprocess import run, DEVNULL
+
+log("Running setup.py")
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+
 
 def get_version():
-    with open("chessdotpy/version.py") as f:
+    with open(os.path.join(root, "version.py")) as f:
         for line in f:
             if line.startswith("__version__"):
                 return line.split("=")[1].strip().strip('"')
@@ -13,35 +17,49 @@ def get_version():
 # Read dependencies from requirements.txt
 def parse_requirements():
     with open("requirements.txt") as f:
-        return f.read().splitlines()
+        reqs = []
+        content = f.read()
+        content = content.splitlines()
+        for line in content:
+            reqs.append(line.split("#")[0].strip())  # Remove comments
+        return reqs
 
 
-root = os.path.dirname(os.path.abspath(__file__))
-# Ensure the game save directory exists
-os.path.makedirs(f'{root}/saves', exist_ok=True)
-# Ensure the asset directory exists
-os.path.makedirs(f'{root}/assets', exist_ok=True)
-# Ensure the stockfish directory exists
-os.path.makedirs(f'{root}/engine', exist_ok=True)
+root = os.path.abspath(os.path.dirname(__file__)).capitalize()
 
-setup(
-    name="chessdotpy",  # Replace with your package name
-    version=get_version(),  # Dynamically get the version from version.py
-    author="Lord Porkchop",  # Replace with your name
-    # Short description of your package
-    description="Chess in Python, featuring Stockfish and chess.com / Lichess API support",
-    # Read the long description from README.md
-    long_description=open('README.md').read(),
-    long_description_content_type="text/markdown",
-    url="https://github.com/LordPorkchop/chessdotpy",  # GitHub URL
-    packages=find_packages(),  # Automatically find all packages
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: Windows :: Windows 10+",
-    ],
-    python_requires=">=3.6",  # Define the minimum Python version
-    # Dynamically get requirements from requirements.txt
-    install_requires=parse_requirements(),
-    include_package_data=True,  # Include files specified in MANIFEST.in
-)
+version = get_version()
+log(f"ChessDotPy version {version}")
+
+log(f"Root directory: {root}")
+
+log("Reading requirements")
+requirements = parse_requirements()
+reqs = len(requirements)
+log(f"{reqs} requirements found")
+
+to_install = []
+for req in requirements:
+    try:
+        exec(f"import {req}")
+        log(f"({requirements.index(req) + 1}/{reqs}) {req}: {frmt.SUC}installed{frmt.RST}")
+    except ModuleNotFoundError:
+        log(f"({requirements.index(req) + 1}/{reqs}) {req}: {frmt.FAIL}not installed{frmt.RST}")
+        to_install.append(req)
+if len(to_install) == 0:
+    log(frmt.SUC + "All requirements installed" + frmt.RST)
+else:
+    installed = []
+    warn(f"{len(to_install)}/10 requirements not installed")
+    for req in to_install:
+        log(f"Installing {req}...")
+        try:
+            run(f"pip install {req}", shell=True,
+                stdout=DEVNULL, stderr=DEVNULL)
+            log(f"{frmt.SUC}{req} installed successfully", frmt.RST)
+            installed.append(req)
+        except Exception as e:
+            error(
+                f"Failed to install {req}: {e}. Please install {req} manually: {frmt.MAG}pip install {req}{frmt.RST}")
+            break
+if installed == to_install:
+    log(frmt.SUC + "All requirements installed" + frmt.RST)
