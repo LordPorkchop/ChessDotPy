@@ -1,0 +1,14 @@
+[Event "Example Game"]
+[Site "Chess.py"]
+[Date "2025.04.15"]
+[Round "1"]
+[White "Player1"]
+[Black "Player2"]
+[Result "1-0"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 8. c3 O-O 
+9. h3 Nb8 10. d4 Nbd7 11. Nbd2 Bb7 12. Bc2 Re8 13. Nf1 Bf8 14. Ng3 g6 15. Bg5 h6 
+16. Be3 Bg7 17. Qd2 Kh7 18. Rad1 Qe7 19. Nh2 Rad8 20. Ng4 Nxg4 21. hxg4 Qh4 
+22. g5 hxg5 23. Bxg5 Qg4 24. Bxd8 Rxd8 25. Qe2 Qh4 26. Qf3 Nf6 27. dxe5 Ng4 
+28. exd6 cxd6 29. Qxf7 Rf8 30. Qxb7 Rxf2 31. Nf1 Rxf1+ 32. Kxf1 Qf2#
+1-0
