@@ -3,8 +3,9 @@ chess # Chess library for Python
 chessdotcom # Chess.com API wrapper
 customtkinter # CustomTkinter for GUI
 itertools # Itertools for list multiplication
-typing # Type hinting
 os # OS module for file operations
 pillow # Pillow for image processing
 pygame # Pygame for sounds
+requests # HTTP requests for API calls
 stockfish # Interaction with engine
+typing # Type hinting
