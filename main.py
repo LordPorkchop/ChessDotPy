@@ -11,6 +11,11 @@ class IllegalMoveError(Exception):
     pass
 
 
+class InvalidPositionError(Exception):
+    """Custom exception for invalid positions."""
+    pass
+
+
 class ChessBoard:
     def __init__(
         self,
@@ -259,25 +264,48 @@ class ChessBoard:
         """
         return "W" if self.board.turn else "B"
 
+    def setFEN(self, fen: str) -> None:
+        """Sets the board to a specific FEN position.
+
+        Args:
+            fen (str): The FEN string representing the position.
+
+        Raises:
+            InvalidPositionError: If the FEN string is invalid.
+        """
+        try:
+            self.board.set_fen(fen)
+            self.update()
+        except ValueError:
+            raise InvalidPositionError(f"Invalid FEN: {fen}")
+
 
 def main():
     """Main function to run the chessboard application."""
-    root = CTk()
-    set_appearance_mode("system")
-    set_default_color_theme("green")
-    root.title("Chess.py")
-    root.iconbitmap("assets/icon.ico")
-    root.geometry("480x550")
-    root.resizable(True, True)
+    app = CTk()  # Initialize the main application window
+    set_appearance_mode("system")  # Set the appearance mode to system default
+    set_default_color_theme("green")  # Set the default color theme to green
+    app.title("Chess.py")  # Set the title of the application window
+    app.iconbitmap("assets/icon.ico")  # Set the icon of the application window
+    app.geometry("500x600")  # Set the initial size of the application window
+    app.resizable(True, True)  # Allow the application window to be resizable
 
-    board = ChessBoard(root, asset_location="assets",
+    tabview = CTkTabview(app, anchor="nw")  # Create a tabview widget
+    # Pack the tabview widget to fill the application window
+    tabview.pack(expand=True, fill="both")
+    tabview.add("Analyze")
+    tabview.add("Play")
+    tabview.add("Settings")
+
+    board = ChessBoard(tabview.tab("Analyze"), asset_location="assets",
                        tile_size=60, start_flipped=False, show=True)
     board.draw()
 
-    btn = CTkButton(root, text="Flip Board",
+    btn = CTkButton(tabview.tab("Analyze"), text="Flip Board",
                     command=lambda: board.flip(draw_immediate=True))
     btn.pack(pady=10)
-    root.mainloop()
+
+    app.mainloop()
 
 
 if __name__ == "__main__":
