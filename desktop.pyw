@@ -4,7 +4,7 @@ from win32com.client import Dispatch
 
 def create_shortcut():
     # Define paths
-    target = os.path.abspath('./main.py')
+    target = os.path.abspath('./main.pyw')
     icon = os.path.abspath('./assets/icon.ico')
     shortcut_path = os.path.join(
         os.path.expanduser("~"), "Desktop", "ChessDotPy.lnk")

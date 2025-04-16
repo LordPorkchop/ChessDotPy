@@ -1,9 +1,11 @@
 import os
 import chess
+import stockfish
 from customtkinter import *
+from debug import *
 from itertools import product
-from typing import Dict
 from PIL import Image, ImageTk
+from typing import Dict
 
 
 class IllegalMoveError(Exception):
@@ -21,6 +23,7 @@ class ChessBoard:
         self,
         root: CTk,
         asset_location: os.PathLike,
+        engine_location: os.PathLike,
         tile_size: int = 60,
         start_flipped: bool = False,
         white_hex: str = "#ffcf9f",
@@ -37,6 +40,13 @@ class ChessBoard:
         else:
             raise FileNotFoundError(
                 f"Asset location '{asset_location}' does not exist.")
+
+        try:
+            self.engine = ChessEngine(
+                path=engine_location, depth=20, skill_level=20)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"No stockfish executable at '{engine_location}'")
 
         self.tile_size = tile_size
 
@@ -120,6 +130,7 @@ class ChessBoard:
                 self.board_rects[f"{col},{row}"] = rect
 
                 text_color = self._white if color == self._black else self._black
+
                 if row == 7:
                     self.canvas.create_text(x1 + self.tile_size - 1, y1 + self.tile_size - 1,
                                             text=self.cols[col], anchor="se", font=("Arial", 8, "bold"), fill=text_color)
@@ -174,6 +185,7 @@ class ChessBoard:
             chess_move = chess.Move.from_uci(move)
             if chess_move in self.board.legal_moves:
                 self.board.push(chess_move)
+                self.engine.make_moves_from_current_position([move])
                 self.update()
             else:
                 raise IllegalMoveError(f"Illegal move: {move}")
@@ -280,8 +292,37 @@ class ChessBoard:
             raise InvalidPositionError(f"Invalid FEN: {fen}")
 
 
+class ChessEngine:
+    def __init__(
+        self,
+        path: os.PathLike,
+        depth: int = 20,
+        skill_level: int = 20,
+    ):
+        self.path = path
+        if not os.path.exists(self):
+            raise FileNotFoundError(
+                f"'{path}' does not exist.")
+        elif not (os.path.isfile(self.path) and self.path.endswith(".exe") and "stockfish" in self.path.lower()):
+            raise FileNotFoundError(
+                f"'{path}' is not a valid Stockfish executable.")
+
+        self.depth = depth
+        if self.depth < 1:
+            raise ValueError(
+                f"ChessEngine.depth must be int > 0, not {self.depth}")
+        elif self.depth > 20:
+            raise ValueError()
+
+        self.engine = stockfish.Stockfish(path=path, depth=depth)
+
+        stockfish.Stockfish()
+
+
 def main():
     """Main function to run the chessboard application."""
+    __assets__ = os.path.join(os.path.dirname(__file__), "assets")
+    __engine__ = os.path.join(os.path.dirname(__file__), "engine")
     app = CTk()  # Initialize the main application window
     set_appearance_mode("system")  # Set the appearance mode to system default
     set_default_color_theme("green")  # Set the default color theme to green
@@ -297,13 +338,8 @@ def main():
     tabview.add("Play")
     tabview.add("Settings")
 
-    board = ChessBoard(tabview.tab("Analyze"), asset_location="assets",
-                       tile_size=60, start_flipped=False, show=True)
-    board.draw()
-
-    btn = CTkButton(tabview.tab("Analyze"), text="Flip Board",
-                    command=lambda: board.flip(draw_immediate=True))
-    btn.pack(pady=10)
+    analyze_board = ChessBoard(tabview.tab("Analyze"), asset_location="assets",
+                               tile_size=60, start_flipped=False, show=False)
 
     app.mainloop()
 
