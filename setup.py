@@ -1,17 +1,17 @@
-from operator import iconcat
+import debug
 import os
 import platform
 import requests as r
-from debug import *
+import stockfish
 from tkinter import messagebox
 from subprocess import run, DEVNULL
 
 
-log("Running setup.py")
+debug.log("Running setup.py")
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 root = os.path.abspath(os.path.dirname(__file__))
-log(f"Root directory: {root}")
+debug.log(f"Root directory: {root}")
 
 
 def get_version():
@@ -31,10 +31,10 @@ def get_latest_version() -> str:
                 if line.startswith("__version__"):
                     return line.split("=")[1].split("#")[0].strip().strip('"')
         else:
-            error(
+            debug.error(
                 f"Failed to fetch latest version. Status code: {response.status_code}")
     except Exception as e:
-        error(f"Error fetching latest version: {e}")
+        debug.error(f"Error fetching latest version: {e}")
 
 
 # Read dependencies from requirements.txt
@@ -58,24 +58,24 @@ latest = get_latest_version()
 version = get_version()
 if latest:
     if latest == version:
-        log(f"ChessDotPy version {version} (latest)")
+        debug.log(f"ChessDotPy version {version} (latest)")
     else:
-        log(f"ChessDotPy version {version}")
-        warn(
+        debug.log(f"ChessDotPy version {version}")
+        debug.warn(
             f"New version available: {latest}. Please update to the latest version.")
 else:
-    log(f"ChessDotPy version {version}")
+    debug.log(f"ChessDotPy version {version}")
 
 
 osversion = platform.version()
 if os.name != 'nt' or int(osversion.split('.')[0]) < 10:
-    exception("ChessDotPy requires Windows 10 or newer.")
+    debug.exception("ChessDotPy requires Windows 10 or newer.")
     exit(1)
 
-log("Reading requirements")
+debug.log("Reading requirements")
 requirements = parse_requirements()
 reqs = len(requirements)
-log(f"{reqs} requirements found")
+debug.log(f"{reqs} requirements found")
 
 to_install = []
 for req in requirements:
@@ -84,40 +84,43 @@ for req in requirements:
             exec(f"import {req_aliases[req]}")
         else:
             exec(f"import {req}")
-        log(f"({requirements.index(req) + 1}/{reqs}) {req}: {frmt.SUC}installed{frmt.RST}")
+        debug.log(
+            f"({requirements.index(req) + 1}/{reqs}) {req}: {debug.frmt.SUC}installed{debug.frmt.RST}")
     except ModuleNotFoundError:
-        log(f"({requirements.index(req) + 1}/{reqs}) {req}: {frmt.FAIL}not installed{frmt.RST}")
+        debug.log(
+            f"({requirements.index(req) + 1}/{reqs}) {req}: {debug.frmt.FAIL}not installed{debug.frmt.RST}")
         to_install.append(req)
 
 if len(to_install) == 0:
-    log("All requirements installed")
+    debug.log("All requirements installed")
 else:
     installed = []
-    warn(f"{len(to_install)} requirement(s) not installed")
+    debug.warn(f"{len(to_install)} requirement(s) not installed")
     for req in to_install:
-        log(f"Installing {req}...")
+        debug.log(f"Installing {req}...")
         try:
             run(f"pip install {req}", shell=True,
                 stdout=DEVNULL, stderr=DEVNULL, check=True)
-            log(f"{frmt.SUC}{req} installed successfully", frmt.RST)
+            debug.log(
+                f"{debug.frmt.SUC}{req} installed successfully", debug.frmt.RST)
             installed.append(req)
         except Exception as e:
-            error(
-                f"Failed to install {req}: {e}. Please install {req} manually: {frmt.MAG}pip install {req}{frmt.RST}")
+            debug.error(
+                f"Failed to install {req}: {e}. Please install {req} manually: {debug.frmt.MAG}pip install {req}{debug.frmt.RST}")
             break
     if installed == to_install:
-        log(frmt.SUC + "All requirements installed" + frmt.RST)
+        debug.log(debug.frmt.SUC + "All requirements installed" + debug.frmt.RST)
     else:
         for i in installed:
             to_install.remove(i)
-        error(
+        debug.error(
             f"Failed to install {len(to_install) - len(installed)} requirement(s)")
-        error("Please install the missing requirements manually")
-        error(f"Missing requirements: {', '.join(to_install)}")
+        debug.error("Please install the missing requirements manually")
+        debug.error(f"Missing requirements: {', '.join(to_install)}")
         exit(1)
 
 if os.path.exists(os.path.join(root, "saves")):
-    log("Scanning root/saves for played games...")
+    debug.log("Scanning root/saves for played games...")
     games = []
     others = []
     for file in os.listdir(os.path.join(root, "saves")):
@@ -125,36 +128,57 @@ if os.path.exists(os.path.join(root, "saves")):
             games.append(os.path.join(root, "saves", file))
         else:
             others.append(os.path.join(root, "saves", file))
-    log(f"{len(games)} game(s) found")
+    debug.log(f"{len(games)} game(s) found")
     if len(others) > 0:
-        warn(f"[{len(others)}] non-PGN files found in {os.path.join(root, "saves")}.")
-        log("Removing non-PGN files in root/saves...")
+        debug.warn(
+            f"[{len(others)}] non-PGN files found in {os.path.join(root, "saves")}.")
+        debug.log("Removing non-PGN files in root/saves...")
         for file in others:
             os.remove(file)
-            log(f"Removed {file}")
+            debug.log(f"Removed {file}")
 else:
-    warn("root/saves does not exist. This indicates a corrupt installation. Please consider reinstalling ChessDotPy from GitHub")
-    log("Creating root/saves")
+    debug.warn("root/saves does not exist. This indicates a corrupt installation. Please consider reinstalling ChessDotPy from GitHub")
+    debug.log("Creating root/saves")
     os.mkdir(os.path.join(root, "saves"))
 
 if not os.path.exists(os.path.join(root, "engine", "stockfish-windows-x86-64-avx2.exe")):
-    exception(
-        f"Stockfish is not installed correctly. Please install it from {frmt.MAG}https://stockfishchess.org/download{frmt.RST} or consider reinstalling ChessDotPy from the official GitHub repository: {frmt.MAG}https://github.com/LordPorkchop/chessdotpy {frmt.RST}")
+    debug.exception(
+        f"Stockfish is not installed correctly. Please install it from {debug.frmt.MAG}https://stockfishchess.org/download{debug.frmt.RST} or consider reinstalling ChessDotPy from the official GitHub repository: {debug.frmt.MAG}https://github.com/LordPorkchop/chessdotpy {debug.frmt.RST}")
+    messagebox.showerror(title="ChessDotPy Setup Error",
+                         message="Failed to setup chess.py: Stockfish is not installed correctly",
+                         icon=messagebox.ERROR,
+                         type=messagebox.OK)
     exit(1)
 
 if not os.path.exists(os.path.join(root, "assets")):
-    exception(
-        f"Asset directory (root/assets) does not exist. This indicates a corrupt installation. Please reinstall ChessDotPy from the official GitHub repository: {frmt.MAG}https://github.com/LordPorkchop/chessdotpy {frmt.RST}")
+    debug.exception(
+        f"Asset directory (root/assets) does not exist. This indicates a corrupt installation. Please reinstall ChessDotPy from the official GitHub repository: {debug.frmt.MAG}https://github.com/LordPorkchop/chessdotpy {debug.frmt.RST}")
+    messagebox.showerror(title="ChessDotPy Setup Error",
+                         message="Failed to setup chess.py: Asset directory is missing",
+                         icon=messagebox.ERROR,
+                         type=messagebox.OK)
     exit(1)
 
 if not os.path.exists(os.path.join(root, "LICENSE.md")):
-    exception(
-        f"The license file does not exist, likely indicating a non-official installation. Please install ChessDotPy for free from the official GitHub repository: {frmt.MAG}https://github.com/LordPorkchop/chessdotpy {frmt.RST}")
+    debug.exception(
+        f"The license file does not exist, likely indicating a non-official installation. Please install ChessDotPy for free from the official GitHub repository: {debug.frmt.MAG}https://github.com/LordPorkchop/chessdotpy {debug.frmt.RST}")
     exit(1)
 
 if not os.path.exists(os.path.join(root, "CITATION.cff")):
-    exception(
-        f"The citation file does not exist, likely indicating a non-official installation. Please install ChessDotPy for free from the official GitHub repository: {frmt.MAG}https://github.com/LordPorkchop/chessdotpy {frmt.RST}")
+    debug.exception(
+        f"The citation file does not exist, likely indicating a non-official installation. Please install ChessDotPy for free from the official GitHub repository: {debug.frmt.MAG}https://github.com/LordPorkchop/chessdotpy {debug.frmt.RST}")
+    exit(1)
+
+try:
+    stockfish.Stockfish(os.path.join(
+        root, "engine", "stockfish-windows-x86-64-avx2.exe"), depth=20)
+    debug.log("Stockfish initialized successfully")
+except Exception as e:
+    debug.exception(f"Failed to initialize Stockfish: {e}")
+    messagebox.showerror(title="ChessDotPy Setup Error",
+                         message=f"Failed to setup chess.py: Failed to initialize Chess Engine at {os.path.join(root, "engine")} ({e})",
+                         icon=messagebox.ERROR,
+                         type=messagebox.OK)
     exit(1)
 
 createShortcut = messagebox.askyesno(title="Chess.py Setup Complete",
@@ -162,10 +186,18 @@ createShortcut = messagebox.askyesno(title="Chess.py Setup Complete",
                                      icon=messagebox.INFO,
                                      type=messagebox.YESNO)
 if createShortcut:
-    log("Creating shortcut on desktop...")
+    debug.log("Creating shortcut on desktop...")
     try:
         run("python desktop.pyw", check=True)
     except Exception as e:
-        error(f"Failed to create shortcut: {e}")
+        debug.error(f"Failed to create shortcut: {e}")
+        messagebox.showerror(title="ChessDotPy Setup Error",
+                             message=f"Failed to create shortcut: {e}",
+                             icon=messagebox.ERROR,
+                             type=messagebox.OK)
 
-log(frmt.SUC + "ChessDotPy Setup complete" + frmt.RST)
+debug.log(debug.frmt.SUC + "ChessDotPy Setup complete" + debug.frmt.RST)
+messagebox.showinfo(title="ChessDotPy Setup Complete",
+                    message="ChessDotPy setup is complete. Please run the program to start playing chess.",
+                    icon=messagebox.INFO,
+                    type=messagebox.OK)

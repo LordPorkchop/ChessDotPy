@@ -291,32 +291,47 @@ class ChessBoard:
         except ValueError:
             raise InvalidPositionError(f"Invalid FEN: {fen}")
 
+    def isWhiteTurn(self) -> bool:
+        """Checks if it's White's turn.
+
+        Returns:
+            bool: True if White's turn, False otherwise.
+        """
+        return self.board.turn
+
+    def isBlackTurn(self) -> bool:
+        """Checks if it's Black's turn.
+
+        Returns:
+            bool: True if Black's turn, False otherwise
+        """
+        return not self.board.turn
+
 
 class ChessEngine:
-    def __init__(
-        self,
-        path: os.PathLike,
-        depth: int = 20,
-        skill_level: int = 20,
-    ):
-        self.path = path
-        if not os.path.exists(self):
-            raise FileNotFoundError(
-                f"'{path}' does not exist.")
-        elif not (os.path.isfile(self.path) and self.path.endswith(".exe") and "stockfish" in self.path.lower()):
-            raise FileNotFoundError(
-                f"'{path}' is not a valid Stockfish executable.")
-
-        self.depth = depth
-        if self.depth < 1:
+    def __init__(self, path: os.PathLike, depth: int = 20, skill_level: int = 20):
+        if not os.path.exists(path):
+            raise FileNotFoundError()
+        if depth < 0:
             raise ValueError(
-                f"ChessEngine.depth must be int > 0, not {self.depth}")
-        elif self.depth > 20:
-            raise ValueError()
+                f"ChessEngine.depth must be integer greater than 0, not {depth}")
+        elif depth > 20:
+            raise RuntimeWarning(
+                f"Performance may be seriously impacted due to ChessEngine.depth being greater than 20 ({depth})")
+        if skill_level > 20 or skill_level < 0:
+            raise ValueError(
+                f"ChessEngine.skill_level must be integer between 0 and 20, not {skill_level}")
 
-        self.engine = stockfish.Stockfish(path=path, depth=depth)
+        self.engine = stockfish.Stockfish(path, depth)
+        self.engine.set_skill_level(skill_level)
 
-        stockfish.Stockfish()
+    def set_skill_level(self, skill_level: int = 20):
+        if skill_level > 20 or skill_level < 0:
+            raise ValueError(
+                f"ChessEngine.set_skill_level() arg 1 skill_level must be integer between 0 and 20, not {skill_level}")
+        self.engine.set_skill_level(skill_level)
+    
+        
 
 
 def main():

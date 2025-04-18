@@ -16,6 +16,11 @@ class frmt:
 
 
 timer = None
+ERRORS = 0
+WARNINGS = 0
+EXCEPTIONS = 0
+DEBUGS = 0
+LOGS = 0
 
 
 def get_timestamp() -> str:
@@ -33,20 +38,30 @@ def get_timestamp() -> str:
 
 
 def warn(msg: str, *args) -> None:
+    global WARNINGS
     print(f"[{get_timestamp()}]{frmt.WRN}: {msg + " " + " ".join(args)}{frmt.RST}")
+    WARNINGS += 1
 
 
 def error(msg: str, *args) -> None:
+    global ERRORS
     print(f"[{get_timestamp()}]{frmt.ERR}: {msg + " " + " ".join(args)}{frmt.RST}")
+    ERRORS += 1
 
 
 def exception(msg: str, *args) -> None:
+    global EXCEPTIONS
     print(f"[{get_timestamp()}]{frmt.EXC}: {msg + " " + " ".join(args)}{frmt.RST}")
+    EXCEPTIONS += 1
 
 
 def debug(msg: str, *args) -> None:
+    global DEBUGS
     print(f"[{get_timestamp()}]{frmt.DBG}: {msg + " " + " ".join(args)}{frmt.RST}")
+    DEBUGS += 1
 
 
 def log(msg: str, *args) -> None:
+    global LOGS
     print(f"[{get_timestamp()}]{frmt.LOG}: {msg + " " + " ".join(args)}{frmt.RST}")
+    LOGS += 1
