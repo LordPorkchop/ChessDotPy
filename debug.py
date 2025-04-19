@@ -65,3 +65,8 @@ def log(msg: str, *args) -> None:
     global LOGS
     print(f"[{get_timestamp()}]{frmt.LOG}: {msg + " " + " ".join(args)}{frmt.RST}")
     LOGS += 1
+
+
+def finish() -> None:
+    global ERRORS, WARNINGS, EXCEPTIONS, DEBUGS, LOGS
+    print(f"[{get_timestamp()}]{frmt.SUC} FINISHED {frmt.STD} with\n\t{frmt.SUC if EXCEPTIONS == 0 else frmt.FAIL}{EXCEPTIONS}{frmt.STD} exceptions,\n\t{frmt.SUC if ERRORS == 0 else frmt.FAIL}{ERRORS}{frmt.STD} errors,\n\t{frmt.SUC if WARNINGS == 0 else frmt.STD}{WARNINGS}{frmt.STD} warnings,\n\t{DEBUGS} debug messages and\n\t{LOGS} log messages.")

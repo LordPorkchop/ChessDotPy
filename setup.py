@@ -198,8 +198,9 @@ if createShortcut:
 else:
     debug.log("Skipping shortcut creation")
 
-debug.log(debug.frmt.SUC + "ChessDotPy Setup complete" + debug.frmt.RST)
 messagebox.showinfo(title="ChessDotPy Setup Complete",
                     message="ChessDotPy setup is complete. Please run the program to start playing chess.",
                     icon=messagebox.INFO,
                     type=messagebox.OK)
+debug.log(debug.frmt.SUC + "ChessDotPy Setup complete" + debug.frmt.RST)
+debug.finish()
