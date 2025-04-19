@@ -471,3 +471,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+else:
+    raise ImportError(
+        "This file is not meant to be imported. Please run it directly.")
