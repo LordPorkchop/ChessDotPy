@@ -1,4 +1,3 @@
-from email import message
 import os
 import chess
 import stockfish
@@ -67,6 +66,24 @@ class ChessBoard:
 
         self.board_rects = {}
 
+        self._highlighted_square = None
+
+        self.piece_names = {
+            "K": "White King",
+            "Q": "White Queen",
+            "R": "White Rook",
+            "N": "White Knight",
+            "B": "White Bishop",
+            "P": "White Pawn",
+            "k": "Black King",
+            "q": "Black Queen",
+            "r": "Black Rook",
+            "n": "Black Knight",
+            "b": "Black Bishop",
+            "p": "Black Pawn",
+            "None": "Empty",
+        }
+
         self._flipped = False
         if start_flipped:
             self.flip(draw_immediate=False)
@@ -78,6 +95,67 @@ class ChessBoard:
                 self.draw()
         else:
             self.shown = False
+
+    def highlight_square(self, square: str) -> None:
+        """Highlights a square with a yellow overlay if it belongs to the current player.
+
+        Args:
+            square (str): The square to highlight (e.g., "e4").
+        """
+        if square not in self.coords:
+            raise ValueError(f"Invalid square: {square}")
+
+        piece = self.board.piece_at(chess.parse_square(square.lower()))
+        if piece is None:
+            return  # No piece on the square, nothing to highlight
+
+        # Check if the piece belongs to the current player
+        if (self.isWhiteTurn() and piece.color) or (self.isBlackTurn() and not piece.color):
+            col = self.cols.index(square[0].upper())
+            row = self.rows.index(square[1])
+
+            x1, y1 = col * self.tile_size, row * self.tile_size
+            x2, y2 = x1 + self.tile_size, y1 + self.tile_size
+
+            self.canvas.create_rectangle(
+                x1, y1, x2, y2, fill="yellow", outline="", stipple="gray50", tags="highlight"
+            )
+
+    def on_square_click(self, event) -> None:
+        """Handles square click events to highlight the square.
+
+        Args:
+            event: The click event.
+        """
+        col = event.x // self.tile_size
+        row = event.y // self.tile_size
+
+        if col < 0 or col > 7 or row < 0 or row > 7:
+            return
+
+        square = f"{self.cols[col]}{self.rows[row]}"
+        piece = self.board.piece_at(chess.parse_square(square.lower()))
+        piece_color = piece.color if piece else None
+        debug(f"Clicked on square: {square}")
+        debug(
+            f"Piece at square: {self.piece_names[str(self.board.piece_at(chess.parse_square(square.lower())))]}")
+        debug(f"Current turn: {'White' if self.isWhiteTurn() else 'Black'}")
+        debug(
+            f"Highlight? {"Yes" if (self.board.turn == piece_color) else "No"}")
+        if (self.isWhiteTurn() == piece_color):
+            self.canvas.delete("highlight")
+            if square.lower != self._highlighted_square:
+                self.highlight_square(square)
+                self._highlighted_square = square.lower()
+
+    def enable_highlighting(self) -> None:
+        """Enables square highlighting on click."""
+        self.canvas.bind("<Button-1>", self.on_square_click)
+
+    def disable_highlighting(self) -> None:
+        """Disables square highlighting."""
+        self.canvas.unbind("<Button-1>")
+        self.canvas.delete("highlight")
 
     def __fetch_img_assets(self) -> Dict[str, ImageTk.PhotoImage]:
         """Fetches the image assets for the chess pieces.
@@ -127,7 +205,7 @@ class ChessBoard:
                 x1, y1 = col * self.tile_size, row * self.tile_size
                 x2, y2 = x1 + self.tile_size, y1 + self.tile_size
                 rect = self.canvas.create_rectangle(
-                    x1, y1, x2, y2, fill=color, outline="")
+                    x1, y1, x2, y2, fill=color, outline="", tags="square")
                 # Prevent garbage collection
                 self.board_rects[f"{col},{row}"] = rect
 
@@ -182,6 +260,9 @@ class ChessBoard:
 
         Args:
             move (str): The move in UCI format, e.g., "e2e4" (represents e4 in SAN).
+
+        Raises:
+            IllegalMoveError: If the move is illegal.
         """
         try:
             chess_move = chess.Move.from_uci(move)
@@ -362,25 +443,28 @@ def main():
     set_appearance_mode("system")  # Set the appearance mode to system default
     set_default_color_theme("green")  # Set the default color theme to green
     app.title("Chess.py")  # Set the title of the application window
-    app.iconbitmap("assets/icon.ico")  # Set the icon of the application window
+    # Set the icon of the application window
+    app.iconbitmap(os.path.join(__assets__, "icon.ico"))
     app.geometry("500x600")  # Set the initial size of the application window
     app.resizable(True, True)  # Allow the application window to be resizable
     # Set the protocol for closing the application window
     app.protocol("WM_DELETE_WINDOW", lambda: close(app))
+    app.protocol("WM_SAVE_YOURSELF", lambda: close(app))
 
     tabview = CTkTabview(app, anchor="nw")  # Create a tabview widget
     # Pack the tabview widget to fill the application window
     tabview.pack(expand=True, fill="both")
     tabview.add("Analyze")
-    tabview.add("Play")
+#    tabview.add("Play")
     tabview.add("Settings")
 
     quit_button = CTkButton(tabview.tab("Settings"),
-                            text="Quit", command=lambda: close(app))
+                            text="Quit", command=lambda: close(app), fg_color="red", hover_color="darkred")
     quit_button.pack(pady=10, padx=10)
 
     analyze_board = ChessBoard(tabview.tab("Analyze"), asset_location=__assets__,
-                               engine_location=__engine__, tile_size=60, start_flipped=False, show=False)
+                               engine_location=__engine__, tile_size=60, start_flipped=False, show=True, draw_immediate=True)
+    analyze_board.enable_highlighting()
 
     app.mainloop()
 
