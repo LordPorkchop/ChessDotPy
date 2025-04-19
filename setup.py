@@ -195,6 +195,8 @@ if createShortcut:
                              message=f"Failed to create shortcut: {e}",
                              icon=messagebox.ERROR,
                              type=messagebox.OK)
+else:
+    debug.log("Skipping shortcut creation")
 
 debug.log(debug.frmt.SUC + "ChessDotPy Setup complete" + debug.frmt.RST)
 messagebox.showinfo(title="ChessDotPy Setup Complete",

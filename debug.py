@@ -15,7 +15,7 @@ class frmt:
     MAG = '\033[35m'                # Magenta (Magenta)
 
 
-timer = None
+timer = perf_counter()
 ERRORS = 0
 WARNINGS = 0
 EXCEPTIONS = 0
@@ -27,7 +27,7 @@ def get_timestamp() -> str:
     global timer
     if timer is None:
         timer = perf_counter()
-        return "00:00.0000"
+        return get_timestamp()
 
     elapsed = perf_counter() - timer
     mins = int(elapsed // 60)

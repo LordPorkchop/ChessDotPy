@@ -1,3 +1,4 @@
+from email import message
 import os
 import chess
 import stockfish
@@ -5,6 +6,7 @@ from customtkinter import *
 from debug import *
 from itertools import product
 from PIL import Image, ImageTk
+from tkinter import messagebox
 from typing import Dict
 
 
@@ -330,14 +332,32 @@ class ChessEngine:
             raise ValueError(
                 f"ChessEngine.set_skill_level() arg 1 skill_level must be integer between 0 and 20, not {skill_level}")
         self.engine.set_skill_level(skill_level)
-    
-        
+
+
+def close(app: CTk) -> None:
+    """Quits the application."""
+    os.remove("RUN.tmp")
+    app.destroy()
+    log("Chess.py was closed")
+    exit(0)
 
 
 def main():
     """Main function to run the chessboard application."""
+    log("Running Chess.py")
+    log("Checking for running instance...")
+    if os.path.exists("RUN.tmp"):
+        error("Chess.py is already running")
+        messagebox.showerror(title="Chess.py Error",
+                             message="Chess.py is already running. Please close the other instance before running a new one. If currently no intance is open, delte the .run file manually",
+                             icon=messagebox.ERROR,
+                             type=messagebox.OK)
+        exit(1)
+    else:
+        open("RUN.tmp", "w").close()
     __assets__ = os.path.join(os.path.dirname(__file__), "assets")
-    __engine__ = os.path.join(os.path.dirname(__file__), "engine")
+    __engine__ = os.path.join(os.path.dirname(
+        __file__), "engine", "stockfish-windows-x86-64-avx2.exe")
     app = CTk()  # Initialize the main application window
     set_appearance_mode("system")  # Set the appearance mode to system default
     set_default_color_theme("green")  # Set the default color theme to green
@@ -345,6 +365,8 @@ def main():
     app.iconbitmap("assets/icon.ico")  # Set the icon of the application window
     app.geometry("500x600")  # Set the initial size of the application window
     app.resizable(True, True)  # Allow the application window to be resizable
+    # Set the protocol for closing the application window
+    app.protocol("WM_DELETE_WINDOW", lambda: close(app))
 
     tabview = CTkTabview(app, anchor="nw")  # Create a tabview widget
     # Pack the tabview widget to fill the application window
@@ -353,8 +375,12 @@ def main():
     tabview.add("Play")
     tabview.add("Settings")
 
-    analyze_board = ChessBoard(tabview.tab("Analyze"), asset_location="assets",
-                               tile_size=60, start_flipped=False, show=False)
+    quit_button = CTkButton(tabview.tab("Settings"),
+                            text="Quit", command=lambda: close(app))
+    quit_button.pack(pady=10, padx=10)
+
+    analyze_board = ChessBoard(tabview.tab("Analyze"), asset_location=__assets__,
+                               engine_location=__engine__, tile_size=60, start_flipped=False, show=False)
 
     app.mainloop()
 
