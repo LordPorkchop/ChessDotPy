@@ -69,19 +69,18 @@ class ChessBoard:
         self._highlighted_square = None
 
         self.piece_names = {
-            "K": "White King",
-            "Q": "White Queen",
-            "R": "White Rook",
-            "N": "White Knight",
-            "B": "White Bishop",
-            "P": "White Pawn",
-            "k": "Black King",
-            "q": "Black Queen",
-            "r": "Black Rook",
-            "n": "Black Knight",
-            "b": "Black Bishop",
-            "p": "Black Pawn",
-            "None": "Empty",
+            "K": "WK",
+            "Q": "WQ",
+            "R": "WR",
+            "N": "WN",
+            "B": "WB",
+            "P": "WP",
+            "k": "BK",
+            "q": "BQ",
+            "r": "BR",
+            "n": "BN",
+            "b": "BB",
+            "p": "BP",
         }
 
         self._flipped = False
@@ -133,15 +132,13 @@ class ChessBoard:
         if col < 0 or col > 7 or row < 0 or row > 7:
             return
 
+        self.canvas.delete("highlight")
+
         square = f"{self.cols[col]}{self.rows[row]}"
         piece = self.board.piece_at(chess.parse_square(square.lower()))
         piece_color = piece.color if piece else None
-        debug(f"Clicked on square: {square}")
-        debug(
-            f"Piece at square: {self.piece_names[str(self.board.piece_at(chess.parse_square(square.lower())))]}")
-        debug(f"Current turn: {'White' if self.isWhiteTurn() else 'Black'}")
-        debug(
-            f"Highlight? {"Yes" if (self.board.turn == piece_color) else "No"}")
+        debug(f"""{square}: {self.piece_names[str(piece)] if piece else "Empty"}{f" [{'W' if self.isWhiteTurn() else 'B'}]" if piece else ""}: {
+              "Yes" if (self.board.turn == piece_color) else "No"}""")
         if (self.isWhiteTurn() == piece_color):
             self.canvas.delete("highlight")
             if square.lower != self._highlighted_square:
@@ -419,7 +416,7 @@ def close(app: CTk) -> None:
     """Quits the application."""
     os.remove("RUN.tmp")
     app.destroy()
-    log("Chess.py was closed")
+    finish()
     exit(0)
 
 
@@ -430,43 +427,55 @@ def main():
     if os.path.exists("RUN.tmp"):
         error("Chess.py is already running")
         messagebox.showerror(title="Chess.py Error",
-                             message="Chess.py is already running. Please close the other instance before running a new one. If currently no intance is open, delte the .run file manually",
+                             message="Chess.py is already running. Please close the other instance before running a new one. If currently no intance is open, delte the RUN.tmp file manually",
                              icon=messagebox.ERROR,
                              type=messagebox.OK)
         exit(1)
     else:
         open("RUN.tmp", "w").close()
-    __assets__ = os.path.join(os.path.dirname(__file__), "assets")
-    __engine__ = os.path.join(os.path.dirname(
-        __file__), "engine", "stockfish-windows-x86-64-avx2.exe")
-    app = CTk()  # Initialize the main application window
-    set_appearance_mode("system")  # Set the appearance mode to system default
-    set_default_color_theme("green")  # Set the default color theme to green
-    app.title("Chess.py")  # Set the title of the application window
-    # Set the icon of the application window
-    app.iconbitmap(os.path.join(__assets__, "icon.ico"))
-    app.geometry("500x600")  # Set the initial size of the application window
-    app.resizable(True, True)  # Allow the application window to be resizable
-    # Set the protocol for closing the application window
-    app.protocol("WM_DELETE_WINDOW", lambda: close(app))
-    app.protocol("WM_SAVE_YOURSELF", lambda: close(app))
 
-    tabview = CTkTabview(app, anchor="nw")  # Create a tabview widget
-    # Pack the tabview widget to fill the application window
-    tabview.pack(expand=True, fill="both")
-    tabview.add("Analyze")
-#    tabview.add("Play")
-    tabview.add("Settings")
+    try:
+        __assets__ = os.path.join(os.path.dirname(__file__), "assets")
+        __engine__ = os.path.join(os.path.dirname(
+            __file__), "engine", "stockfish-windows-x86-64-avx2.exe")
+        app = CTk()  # Initialize the main application window
+        # Set the appearance mode to system default
+        set_appearance_mode("system")
+        # Set the default color theme to green
+        set_default_color_theme("green")
+        app.title("Chess.py")  # Set the title of the application window
+        # Set the icon of the application window
+        app.iconbitmap(os.path.join(__assets__, "icon.ico"))
+        # Set the initial size of the application window
+        app.geometry("500x600")
+        # Allow the application window to be resizable
+        app.resizable(True, True)
+        # Set the protocol for closing the application window
+        app.protocol("WM_DELETE_WINDOW", lambda: close(app))
+        app.protocol("WM_SAVE_YOURSELF", lambda: close(app))
 
-    quit_button = CTkButton(tabview.tab("Settings"),
-                            text="Quit", command=lambda: close(app), fg_color="red", hover_color="darkred")
-    quit_button.pack(pady=10, padx=10)
+        tabview = CTkTabview(app, anchor="nw")  # Create a tabview widget
+        # Pack the tabview widget to fill the application window
+        tabview.pack(expand=True, fill="both")
+        tabview.add("Analyze")
+    #    tabview.add("Play")
+        tabview.add("Settings")
 
-    analyze_board = ChessBoard(tabview.tab("Analyze"), asset_location=__assets__,
-                               engine_location=__engine__, tile_size=60, start_flipped=False, show=True, draw_immediate=True)
-    analyze_board.enable_highlighting()
+        quit_button = CTkButton(tabview.tab("Settings"),
+                                text="Quit", command=lambda: close(app), fg_color="red", hover_color="darkred")
+        quit_button.pack(pady=10, padx=10)
 
-    app.mainloop()
+        analyze_board = ChessBoard(tabview.tab("Analyze"), asset_location=__assets__,
+                                   engine_location=__engine__, tile_size=60, start_flipped=False, show=True, draw_immediate=True)
+        analyze_board.enable_highlighting()
+
+        app.mainloop()
+    except KeyboardInterrupt:
+        log("chess.py closed due to KeyboardInterrupt (CTRL+C)")
+        close()
+    except Exception as e:
+        exception(f"chess.py closed tue to unexpected error: {e}")
+        close()
 
 
 if __name__ == "__main__":
