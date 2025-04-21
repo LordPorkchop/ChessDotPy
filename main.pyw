@@ -1,4 +1,3 @@
-from email import message
 import os
 import chess
 import stockfish
@@ -121,7 +120,6 @@ class ChessBoard:
                 x1, y1, x2, y2, fill="yellow", outline="", stipple="gray50", tags="highlight")
             # Send the highlight rectangle to the back
             self.canvas.tag_lower("highlight", "piece")
-            self.canvas.tag_lower("highlight", "text")
 
     def on_square_click(self, event) -> None:
         """Handles square click events to highlight the square.
