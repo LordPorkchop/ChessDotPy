@@ -14,9 +14,21 @@ class IllegalMoveError(Exception):
     pass
 
 
+class InvalidMoveError(Exception):
+    """Custom exception for invalid moves."""
+    pass
+
+
 class InvalidPositionError(Exception):
     """Custom exception for invalid positions."""
     pass
+
+
+class ChessEngine(stockfish.Stockfish):
+    def __init__(self, path: os.PathLike, depth: int = 20, skill_level: int = 20) -> None:
+        super().__init__(path=path)
+        self.set_depth(depth)
+        self.set_skill_level(skill_level)
 
 
 class ChessBoard:
@@ -388,29 +400,44 @@ class ChessBoard:
         """
         return not self.board.turn
 
+    def setPGN(self, pgn: str) -> None:
+        """Sets the board to the given PGN position
 
-class ChessEngine:
-    def __init__(self, path: os.PathLike, depth: int = 20, skill_level: int = 20):
-        if not os.path.exists(path):
-            raise FileNotFoundError()
-        if depth < 0:
-            raise ValueError(
-                f"ChessEngine.depth must be integer greater than 0, not {depth}")
-        elif depth > 20:
-            raise RuntimeWarning(
-                f"Performance may be seriously impacted due to ChessEngine.depth being greater than 20 ({depth})")
-        if skill_level > 20 or skill_level < 0:
-            raise ValueError(
-                f"ChessEngine.skill_level must be integer between 0 and 20, not {skill_level}")
+        Args:
+            pgn (str): str in PGN format. Must conatin multiple lines
 
-        self.engine = stockfish.Stockfish(path, depth)
-        self.engine.set_skill_level(skill_level)
-
-    def set_skill_level(self, skill_level: int = 20):
-        if skill_level > 20 or skill_level < 0:
-            raise ValueError(
-                f"ChessEngine.set_skill_level() arg 1 skill_level must be integer between 0 and 20, not {skill_level}")
-        self.engine.set_skill_level(skill_level)
+        Raises:
+            IllegalMoveError: Gets raised if one or multiple of the in pgn included moves are illegal
+            InvalidMoveError: Gets raised if one or multiple of the in pgn included moves are invalid
+        """
+        lines = pgn.splitlines()
+        if "" in lines:
+            moves_start = lines.index("") + 1
+        else:
+            for idx, line in enumerate(lines):
+                if line.startswith("1."):
+                    moves_start = idx
+                    break
+        move_lines = lines[moves_start:]
+        moves_text = " ".join(move_lines)
+        moves = moves_text.split(" ")
+        del moves[-1]   # Removes game ending
+        del moves[::3]  # Deletes the move numbers
+        test_board = chess.Board()
+        for move in moves:
+            try:
+                test_board.push_san(move)
+            except chess.IllegalMoveError:
+                raise IllegalMoveError(
+                    f"{move} is not a legal move at board state\n{str(test_board)}")
+            except chess.InvalidMoveError:
+                raise InvalidMoveError(
+                    f"{move} is not a valid move in SAN notation")
+        self.board.reset()
+        for move in moves:
+            self.board.push_san(move)
+        self.engine.set_fen_position(self.board.fen())
+        self.update()
 
 
 def close(app: CTk) -> None:
