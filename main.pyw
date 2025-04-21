@@ -1,3 +1,4 @@
+from email import message
 import os
 import chess
 import stockfish
@@ -117,8 +118,10 @@ class ChessBoard:
             x2, y2 = x1 + self.tile_size, y1 + self.tile_size
 
             self.canvas.create_rectangle(
-                x1, y1, x2, y2, fill="yellow", outline="", stipple="gray50", tags="highlight"
-            )
+                x1, y1, x2, y2, fill="yellow", outline="", stipple="gray50", tags="highlight")
+            # Send the highlight rectangle to the back
+            self.canvas.tag_lower("highlight", "piece")
+            self.canvas.tag_lower("highlight", "text")
 
     def on_square_click(self, event) -> None:
         """Handles square click events to highlight the square.
@@ -129,7 +132,7 @@ class ChessBoard:
         col = event.x // self.tile_size
         row = event.y // self.tile_size
 
-        if col < 0 or col > 7 or row < 0 or row > 7:
+        if col < 0 or col > 7 or row < 0 or row > 7:  # If click is outside of board
             return
 
         self.canvas.delete("highlight")
@@ -210,10 +213,10 @@ class ChessBoard:
 
                 if row == 7:
                     self.canvas.create_text(x1 + self.tile_size - 1, y1 + self.tile_size - 1,
-                                            text=self.cols[col], anchor="se", font=("Arial", 8, "bold"), fill=text_color)
+                                            text=self.cols[col], anchor="se", font=("Arial", 8, "bold"), fill=text_color, tags="text")
                 if col == 0:
                     self.canvas.create_text(
-                        x1 + 3, y1 + 3, text=self.rows[row], anchor="nw", font=("Arial", 8, "bold"), fill=text_color)
+                        x1 + 3, y1 + 3, text=self.rows[row], anchor="nw", font=("Arial", 8, "bold"), fill=text_color, tags="text")
 
         board_lines = str(self.board).splitlines()
         for row, line in enumerate(board_lines):
@@ -256,7 +259,7 @@ class ChessBoard:
         """Moves a piece on the chessboard.
 
         Args:
-            move (str): The move in UCI format, e.g., "e2e4" (represents e4 in SAN).
+            move (str): The move in UCI format, e.g., "b1c3" (represents Nc3 in SAN).
 
         Raises:
             IllegalMoveError: If the move is illegal.
@@ -475,6 +478,8 @@ def main():
         close()
     except Exception as e:
         exception(f"chess.py closed tue to unexpected error: {e}")
+        messagebox.showerror(
+            title="Chess.py Error", message=f"Chess.py closed due to an unexpected error: {e}", icon=messagebox.ERROR, type=messagebox.OK)
         close()
 
 

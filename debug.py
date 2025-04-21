@@ -13,6 +13,7 @@ class frmt:
     FAIL = '\033[91m'               # Red (Failure)
     LOG = '\033[0m[LOG]'            # Standard color (Log)
     MAG = '\033[35m'                # Magenta (Magenta)
+    YEL = '\033[93m'                # Yellow (Yellow)
 
 
 timer = perf_counter()
@@ -69,4 +70,17 @@ def log(msg: str, *args) -> None:
 
 def finish() -> None:
     global ERRORS, WARNINGS, EXCEPTIONS, DEBUGS, LOGS
-    print(f"{frmt.SUC} FINISHED {frmt.STD} in {get_timestamp()} with\n\t{frmt.SUC if EXCEPTIONS == 0 else frmt.FAIL}{EXCEPTIONS}{frmt.STD} exceptions,\n\t{frmt.SUC if ERRORS == 0 else frmt.FAIL}{ERRORS}{frmt.STD} errors,\n\t{frmt.SUC if WARNINGS == 0 else frmt.STD}{WARNINGS}{frmt.STD} warnings,\n\t{DEBUGS} debug messages and\n\t{LOGS} log messages.")
+    print(f"{frmt.SUC}FINISHED{frmt.STD} in {get_timestamp()} with\n\t{frmt.SUC if EXCEPTIONS == 0 else frmt.FAIL}{EXCEPTIONS}{frmt.STD} exceptions,\n\t{frmt.SUC if ERRORS == 0 else frmt.FAIL}{ERRORS}{frmt.STD} errors,\n\t{frmt.SUC if WARNINGS == 0 else frmt.YEL}{WARNINGS}{frmt.STD} warnings,\n\t{DEBUGS} debug messages and\n\t{LOGS} log messages.")
+
+
+if __name__ == "__main__":
+    # Example usage of the functions
+    print("Usage example:")
+    log("This is a log message.")
+    debug("This is a debug message.")
+    warn("This is a warning message.")
+    error("This is an error message.")
+    exception("This is an exception message.")
+
+    # Finish the script and print summary
+    finish()
