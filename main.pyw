@@ -1,12 +1,12 @@
 import os
 import chess
 import stockfish
-from customtkinter import *
+from customtkinter import *  # type: ignore (ignores wildcard import warning)
 from debug import *
 from itertools import product
 from PIL import Image, ImageTk
 from tkinter import messagebox
-from typing import Dict
+from typing import Dict, Literal
 
 
 class IllegalMoveError(Exception):
@@ -25,7 +25,7 @@ class InvalidPositionError(Exception):
 
 
 class ChessEngine(stockfish.Stockfish):
-    def __init__(self, path: os.PathLike, depth: int = 20, skill_level: int = 20) -> None:
+    def __init__(self, path: str, depth: int = 20, skill_level: int = 20) -> None:
         super().__init__(path=path)
         self.set_depth(depth)
         self.set_skill_level(skill_level)
@@ -34,9 +34,9 @@ class ChessEngine(stockfish.Stockfish):
 class ChessBoard:
     def __init__(
         self,
-        root: CTk,
-        asset_location: os.PathLike,
-        engine_location: os.PathLike,
+        root: CTk | CTkFrame,
+        asset_location: str,
+        engine_location: str,
         tile_size: int = 60,
         start_flipped: bool = False,
         white_hex: str = "#ffcf9f",
@@ -328,7 +328,13 @@ class ChessBoard:
         Returns:
             bool: True if the game is a draw, False otherwise.
         """
-        return self.board.is_draw()
+        return (
+            self.board.is_insufficient_material() or
+            self.board.is_seventyfive_moves() or
+            self.board.is_fivefold_repetition() or
+            self.board.is_stalemate() or
+            (self.board.is_game_over() and self.board.result() == "1/2-1/2")
+        )
 
     def is_over(self) -> bool:
         """Checks if the game is over.
@@ -337,6 +343,14 @@ class ChessBoard:
             bool: True if the game is over, False otherwise.
         """
         return self.board.is_game_over()
+
+    def result(self) -> Literal['1-0', '1/2-1/2', '0-1', '*']:
+        """Returns the result of the game.
+
+        Returns:
+            Literal[]: The result of the game, either "1-0", "0-1", or "1/2-1/2".
+        """
+        return self.board.result()  # type: ignore
 
     def get_board(self) -> chess.Board:
         """Returns the current board.
@@ -411,6 +425,7 @@ class ChessBoard:
             InvalidMoveError: Gets raised if one or multiple of the in pgn included moves are invalid
         """
         lines = pgn.splitlines()
+        moves_start = None
         if "" in lines:
             moves_start = lines.index("") + 1
         else:
@@ -418,6 +433,9 @@ class ChessBoard:
                 if line.startswith("1."):
                     moves_start = idx
                     break
+        if moves_start is None:
+            raise InvalidMoveError(
+                "Could not determine where moves start in PGN.")
         move_lines = lines[moves_start:]
         moves_text = " ".join(move_lines)
         moves = moves_text.split(" ")
@@ -462,11 +480,11 @@ def main():
     else:
         open("RUN.tmp", "w").close()
 
+    app = CTk()  # Initialize the main application window
     try:
         __assets__ = os.path.join(os.path.dirname(__file__), "assets")
         __engine__ = os.path.join(os.path.dirname(
             __file__), "engine", "stockfish-windows-x86-64-avx2.exe")
-        app = CTk()  # Initialize the main application window
         # Set the appearance mode to system default
         set_appearance_mode("system")
         # Set the default color theme to green
@@ -500,12 +518,12 @@ def main():
         app.mainloop()
     except KeyboardInterrupt:
         log("chess.py closed due to KeyboardInterrupt (CTRL+C)")
-        close()
+        close(app)
     except Exception as e:
         exception(f"chess.py closed tue to unexpected error: {e}")
         messagebox.showerror(
             title="Chess.py Error", message=f"Chess.py closed due to an unexpected error: {e}", icon=messagebox.ERROR, type=messagebox.OK)
-        close()
+        close(app)
 
 
 if __name__ == "__main__":
