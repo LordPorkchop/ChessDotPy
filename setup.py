@@ -22,7 +22,7 @@ def get_version():
     raise RuntimeError("Unable to find version string in root/version.py")
 
 
-def get_latest_version() -> str:
+def get_latest_version() -> str | None:
     try:
         response = r.get(
             "https://raw.githubusercontent.com/LordPorkchop/ChessDotPy/refs/heads/main/version.py")

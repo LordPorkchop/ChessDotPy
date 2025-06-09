@@ -5,6 +5,7 @@ from customtkinter import *  # type: ignore (ignores wildcard import warning)
 from debug import *
 from itertools import product
 from PIL import Image, ImageTk
+from pygame import *  # type: ignore (ignores wildcard import warning)
 from tkinter import messagebox
 from typing import Dict, Literal
 
@@ -197,7 +198,7 @@ class ChessBoard:
         return pieces
 
     def flip(self, draw_immediate: bool = False) -> None:
-        """Flips the chessboard vertically."""
+        """Flips the chessboard vertically and horizontally."""
         self._flipped = not self._flipped
         self.rows.reverse()
         self.cols.reverse()
@@ -348,7 +349,7 @@ class ChessBoard:
         """Returns the result of the game.
 
         Returns:
-            Literal[]: The result of the game, either "1-0", "0-1", or "1/2-1/2".
+            Literal['1-0', '1/2-1/2', '0-1', '*']: The result of the game, either "1-0", "0-1", or "1/2-1/2".
         """
         return self.board.result()  # type: ignore
 
@@ -515,6 +516,16 @@ def main():
                                    engine_location=__engine__, tile_size=60, start_flipped=False, show=True, draw_immediate=True)
         analyze_board.enable_highlighting()
 
+        pgnInput = CTkEntry(tabview.tab(
+            "Analyze"), placeholder_text="Paste PGN here...", placeholder_text_color="lightgray")
+        pgnSubmit = CTkButton(tabview.tab("Analyze"), text="Load")
+        pgnInput.pack(side="left", pady=10)
+        pgnSubmit.pack(side="right", pady=10)
+
+        flip_button = CTkButton(tabview.tab(
+            "Analyze"), text="Flip Board", command=lambda: analyze_board.flip(draw_immediate=True))
+        flip_button.pack(padx=5, pady=10)
+
         app.mainloop()
     except KeyboardInterrupt:
         log("chess.py closed due to KeyboardInterrupt (CTRL+C)")
@@ -527,7 +538,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        exception(str(e))
 else:
     raise ImportError(
-        "This file is not meant to be imported. Please run it directly.")
+        "This file is designed to be run standalone")
