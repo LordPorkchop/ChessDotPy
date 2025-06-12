@@ -54,6 +54,18 @@ req_aliases = {
 }
 
 
+def __is_greater(v1, v2):
+    v1_parts = list(map(int, v1.split(".")))
+    v2_parts = list(map(int, v2.split(".")))
+    return v1_parts > v2_parts
+
+
+def __is_lower(v1, v2):
+    v1_parts = list(map(int, v1.split(".")))
+    v2_parts = list(map(int, v2.split(".")))
+    return v1_parts < v2_parts
+
+
 latest = get_latest_version()
 version = get_version()
 if latest:
@@ -61,8 +73,15 @@ if latest:
         debug.log(f"ChessDotPy version {version} (latest)")
     else:
         debug.log(f"ChessDotPy version {version}")
-        debug.warn(
-            f"New version available: {latest}. Please update to the latest version.")
+        if __is_greater(latest, version):
+            debug.warn(
+                f"New version available: {latest}. Please update to the latest version.")
+        elif __is_lower(latest, version):
+            debug.warn(
+                f"Your version {version} is newer than the officially latest version {latest}, indicating a potentially unstable development version.")
+        else:
+            debug.error(
+                "Your version does not match the Chess.py version naming scheme")
 else:
     debug.log(f"ChessDotPy version {version}")
 
