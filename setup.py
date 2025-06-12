@@ -3,7 +3,7 @@ import os
 import platform
 import requests as r
 import stockfish
-from tkinter import messagebox
+from CTkMessagebox import CTkMessagebox
 from subprocess import run, DEVNULL
 
 
@@ -163,19 +163,23 @@ else:
 if not os.path.exists(os.path.join(root, "engine", "stockfish-windows-x86-64-avx2.exe")):
     debug.exception(
         f"Stockfish is not installed correctly. Please install it from {debug.frmt.MAG}https://stockfishchess.org/download{debug.frmt.RST} or consider reinstalling ChessDotPy from the official GitHub repository: {debug.frmt.MAG}https://github.com/LordPorkchop/chessdotpy {debug.frmt.RST}")
-    messagebox.showerror(title="ChessDotPy Setup Error",
-                         message="Failed to setup chess.py: Stockfish is not installed correctly",
-                         icon=messagebox.ERROR,
-                         type=messagebox.OK)
+    CTkMessagebox(
+        title="Chess.py Setup Error",
+        message="Failed to setup chess.py: Stockfish is not installed correctly. Please install it from https://stockfishchess.org/download or consider reinstalling Chess.py from the official GitHub repository: https://github.com/LordPorkchop/chessdotpy",
+        icon="cancel",
+        option_1="OK"
+    )
     exit(1)
 
 if not os.path.exists(os.path.join(root, "assets")):
     debug.exception(
         f"Asset directory (root/assets) does not exist. This indicates a corrupt installation. Please reinstall ChessDotPy from the official GitHub repository: {debug.frmt.MAG}https://github.com/LordPorkchop/chessdotpy {debug.frmt.RST}")
-    messagebox.showerror(title="ChessDotPy Setup Error",
-                         message="Failed to setup chess.py: Asset directory is missing",
-                         icon=messagebox.ERROR,
-                         type=messagebox.OK)
+    CTkMessagebox(
+        title="Chess.py Setup Error",
+        message="Failed to setup chess.py: Asset directory is missing. Please reinstall Chess.py from the official GitHub repository: https://github.com/LordPorkchop/chessdotpy",
+        icon="cancel",
+        option_1="OK"
+    )
     exit(1)
 
 if not os.path.exists(os.path.join(root, "LICENSE.md")):
@@ -194,32 +198,46 @@ try:
     debug.log("Stockfish initialized successfully")
 except Exception as e:
     debug.exception(f"Failed to initialize Stockfish: {e}")
-    messagebox.showerror(title="ChessDotPy Setup Error",
-                         message=f"Failed to setup chess.py: Failed to initialize Chess Engine at {os.path.join(root, "engine")} ({e})",
-                         icon=messagebox.ERROR,
-                         type=messagebox.OK)
+    CTkMessagebox(
+        title="Chess.py Setup Error",
+        message=f"Failed to setup chess.py: Failed to initialize Chess Engine at {os.path.join(root, "engine")} ({e})",
+        icon="cancel",
+        option_1="OK"
+    )
     exit(1)
 
-createShortcut = messagebox.askyesno(title="Chess.py Setup Complete",
-                                     message="Chess.py setup is complete. Do you want to create a shortcut on your desktop?",
-                                     icon=messagebox.INFO,
-                                     type=messagebox.YESNO)
-if createShortcut:
-    debug.log("Creating shortcut on desktop...")
-    try:
-        run("python desktop.pyw", check=True)
-    except Exception as e:
-        debug.error(f"Failed to create shortcut: {e}")
-        messagebox.showerror(title="ChessDotPy Setup Error",
-                             message=f"Failed to create shortcut: {e}",
-                             icon=messagebox.ERROR,
-                             type=messagebox.OK)
+if not os.path.exists(os.path.join(os.path.expanduser("~"), "Desktop", "Chess.py.lnk")):
+    createShortcut = CTkMessagebox(
+        title="Chess.py Setup Complete",
+        message="Chess.py setup is complete. Do you want to create a shortcut on your desktop?",
+        icon="info",
+        option_1="Yes",
+        option_2="No",
+        option_focus=1
+    ).get() == "Yes"
+    if createShortcut:
+        debug.log("Creating shortcut on desktop...")
+        try:
+            run("python desktop.pyw", check=True)
+        except Exception as e:
+            debug.error(f"Failed to create shortcut: {e}")
+            CTkMessagebox(
+                title="ChessDotPy Setup Error",
+                message=f"Failed to create shortcut: {e}",
+                icon="cancel",
+                option_1="OK"
+            )
+    else:
+        debug.log("Skipping shortcut creation after user prompt")
 else:
-    debug.log("Skipping shortcut creation")
+    debug.log("Skipping shortcut creation, as it already exists")
 
-messagebox.showinfo(title="ChessDotPy Setup Complete",
-                    message="ChessDotPy setup is complete. Please run the program to start playing chess.",
-                    icon=messagebox.INFO,
-                    type=messagebox.OK)
+
+CTkMessagebox(
+    title="ChessDotPy Setup Complete",
+    message="ChessDotPy setup is complete. Please run the program to start playing chess.",
+    icon="check",
+    option_1="OK"
+)
 debug.log(debug.frmt.SUC + "ChessDotPy Setup complete" + debug.frmt.RST)
 debug.finish()

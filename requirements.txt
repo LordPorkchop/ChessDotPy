@@ -1,6 +1,7 @@
 berserk # Lichess API wrapper
 chess # Chess library for Python
 chessdotcom # Chess.com API wrapper
+CTkMessageBox # CustomTkinter MessageBox for GUI
 customtkinter # CustomTkinter for GUI
 datetime # Version generation
 itertools # Itertools for list multiplication

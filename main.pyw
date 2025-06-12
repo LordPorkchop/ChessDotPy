@@ -1,6 +1,8 @@
 import os
 import chess
 import stockfish
+import subprocess
+from CTkMessagebox import CTkMessagebox
 from customtkinter import *  # type: ignore (ignores wildcard import warning)
 from debug import *
 from itertools import product
@@ -8,6 +10,8 @@ from PIL import Image, ImageTk
 from pygame import *  # type: ignore (ignores wildcard import warning)
 from tkinter import messagebox
 from typing import Dict, Literal
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
 
 class IllegalMoveError(Exception):
@@ -30,6 +34,16 @@ class ChessEngine(stockfish.Stockfish):
         super().__init__(path=path)
         self.set_depth(depth)
         self.set_skill_level(skill_level)
+        # Prevent Stockfish from opening a console window on Windows
+        if os.name == "nt":
+            self._Stockfish__process = subprocess.Popen(
+                [path],
+                universal_newlines=True,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
 
 
 class ChessBoard:
@@ -441,7 +455,7 @@ class ChessBoard:
         moves_text = " ".join(move_lines)
         moves = moves_text.split(" ")
         del moves[-1]   # Removes game ending
-        del moves[::3]  # Deletes the move numbers
+        del moves[::3]  # Removes move numbers
         test_board = chess.Board()
         for move in moves:
             try:
@@ -460,11 +474,21 @@ class ChessBoard:
 
 
 def close(app: CTk) -> None:
-    """Quits the application."""
-    os.remove("RUN.tmp")
-    app.destroy()
-    finish()
-    exit(0)
+    """Quits the application after prompting the user."""
+    msg = CTkMessagebox(master=app,
+                        title="Really Quit?",
+                        message="Do you really want to quit Chess.py? Any unsaved progress will be lost.",
+                        icon="question",
+                        option_1="Cancel",
+                        option_2="Quit",
+                        sound=True,
+                        topmost=True,
+                        option_focus=1)
+    if msg.get() == "Quit":
+        os.remove("RUN.tmp")
+        app.destroy()
+        finish()
+        exit(0)
 
 
 def main():
@@ -473,10 +497,10 @@ def main():
     log("Checking for running instance...")
     if os.path.exists("RUN.tmp"):
         error("Chess.py is already running")
-        messagebox.showerror(title="Chess.py Error",
-                             message="Chess.py is already running. Please close the other instance before running a new one. If currently no intance is open, delte the RUN.tmp file manually",
-                             icon=messagebox.ERROR,
-                             type=messagebox.OK)
+        CTkMessagebox(title="Chess.py Error",
+                      message="Chess.py is already running. Please close the other instance before running a new one.",
+                      icon="cancel",
+                      option_1="OK")
         exit(1)
     else:
         open("RUN.tmp", "w").close()
@@ -494,7 +518,7 @@ def main():
         # Set the icon of the application window
         app.iconbitmap(os.path.join(__assets__, "icon.ico"))
         # Set the initial size of the application window
-        app.geometry("500x600")
+        app.geometry("500x700")
         # Allow the application window to be resizable
         app.resizable(True, True)
         # Set the protocol for closing the application window

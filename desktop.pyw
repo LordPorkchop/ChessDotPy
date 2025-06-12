@@ -7,7 +7,7 @@ def create_shortcut():
     target = os.path.abspath('./main.pyw')
     icon = os.path.abspath('./assets/icon.ico')
     shortcut_path = os.path.join(
-        os.path.expanduser("~"), "Desktop", "ChessDotPy.lnk")
+        os.path.expanduser("~"), "Desktop", "Chess.py.lnk")
 
     # Create shortcut
     shell = Dispatch('WScript.Shell')
