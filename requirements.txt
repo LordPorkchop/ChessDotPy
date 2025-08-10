@@ -4,6 +4,6 @@ chess.com
 customtkinter
 pillow
 pygame
-pywin32
 requests
 stockfish
+win32com
