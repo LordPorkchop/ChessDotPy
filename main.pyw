@@ -7,11 +7,10 @@ from customtkinter import *  # type: ignore (ignores wildcard import warning)
 from debug import *
 from itertools import product
 from PIL import Image, ImageTk
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 from pygame import *  # type: ignore (ignores wildcard import warning)
 from tkinter import messagebox
 from typing import Dict, Literal
-
-os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
 
 class IllegalMoveError(Exception):
@@ -181,6 +180,50 @@ class ChessBoard:
         """Disables square highlighting."""
         self.canvas.unbind("<Button-1>")
         self.canvas.delete("highlight")
+        
+        
+    def get_possible_moves(self, square: str) -> list[str]:
+        """Returns a list of possible moves for the piece on the given square.
+
+        Args:
+            square (str): The square to check for possible moves (e.g., "e4").
+
+        Returns:
+            list[str]: A list of possible moves in UCI format.
+        """
+        if square not in self.coords:
+            raise ValueError(f"Invalid square: {square}")
+
+        piece_square = chess.parse_square(square.lower())
+        piece = self.board.piece_at(piece_square)
+
+        if piece is None or (self.isWhiteTurn() != piece.color):
+            return []
+        
+        legal_moves = [move.uci() for move in self.board.legal_moves if move.from_square == piece_square]
+        return legal_moves
+    
+    def move_piece(self, from_square: str, to_square: str) -> None:
+        """Moves a piece from one square to another.
+
+        Args:
+            from_square (str): The square to move the piece from (e.g., "e4").
+            to_square (str): The square to move the piece to (e.g., "e5").
+
+        Raises:
+            IllegalMoveError: If the move is illegal.
+            InvalidMoveError: If the move is invalid.
+        """
+        if from_square not in self.coords or to_square not in self.coords:
+            raise ValueError(f"Invalid square: {from_square} or {to_square}")
+
+        move = chess.Move.from_uci(f"{from_square.lower()}{to_square.lower()}")
+        if move in self.board.legal_moves:
+            self.board.push(move)
+            self.engine.make_moves_from_current_position([move.uci()])
+            self.update()
+        else:
+            raise IllegalMoveError(f"Illegal move: {from_square} to {to_square}")
 
     def __fetch_img_assets(self) -> Dict[str, ImageTk.PhotoImage]:
         """Fetches the image assets for the chess pieces.
@@ -531,6 +574,7 @@ def main():
         tabview.add("Analyze")
     #    tabview.add("Play")
         tabview.add("Settings")
+
 
         quit_button = CTkButton(tabview.tab("Settings"),
                                 text="Quit", command=lambda: close(app), fg_color="red", hover_color="darkred")
