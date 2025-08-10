@@ -1,17 +1,9 @@
-berserk # Lichess API wrapper
-chess # Chess library for Python
-chess.com # Chess.com API wrapper
-CTkMessageBox # CustomTkinter MessageBox for GUI
-customtkinter # CustomTkinter for GUI
-datetime # Version generation
-itertools # Itertools for list multiplication
-os # OS module for file operations
-pillow # Pillow for image processing
-platform # Platform for OS detection
-pygame # Pygame for sounds
-pywin32 # Windows-specific modules for file operations
-requests # HTTP requests for API calls
-stockfish # Interaction with engine
-time # Time module for delays and performance logging
-tkinter # Tkinter for MessageBox
-typing # Type hinting
+berserk
+chess
+chess.com
+customtkinter
+pillow
+pygame
+pywin32
+requests
+stockfish
