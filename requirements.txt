@@ -4,6 +4,6 @@ chess.com
 customtkinter
 pillow
 pygame
-pywin32
+pywin32; sys_platform == "win32"
 requests
 stockfish
