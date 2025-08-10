@@ -1,8 +1,10 @@
+import importlib
 import debug
 import os
 import platform
-import requests as r
+import requests
 import stockfish
+import sys
 from CTkMessagebox import CTkMessagebox
 from subprocess import run, DEVNULL
 
@@ -24,7 +26,7 @@ def get_version():
 
 def get_latest_version() -> str | None:
     try:
-        response = r.get(
+        response = requests.get(
             "https://raw.githubusercontent.com/LordPorkchop/ChessDotPy/refs/heads/main/version.py")
         if response.status_code == 200:
             for line in response.text.splitlines():
@@ -44,7 +46,9 @@ def parse_requirements():
         content = f.read()
         content = content.splitlines()
         for line in content:
-            reqs.append(line.split("#")[0].strip())  # Remove comments
+            req = line.split("#")[0].strip()  # Remove comments
+            if req:  # Skip empty lines
+                reqs.append(req)
         return reqs
 
 
@@ -97,12 +101,13 @@ reqs = len(requirements)
 debug.log(f"{reqs} requirements found")
 
 to_install = []
+
 for req in requirements:
     try:
         if req in req_aliases.keys():
-            exec(f"import {req_aliases[req]}")
+            importlib.import_module(req_aliases[req])
         else:
-            exec(f"import {req}")
+            importlib.import_module(req)
         debug.log(
             f"({requirements.index(req) + 1}/{reqs}) {req}: {debug.frmt.SUC}installed{debug.frmt.RST}")
     except ModuleNotFoundError:
@@ -118,7 +123,8 @@ else:
     for req in to_install:
         debug.log(f"Installing {req}...")
         try:
-            run(f"pip install {req}", shell=True,
+
+            run([sys.executable, "-m", "pip", "install", req, "--quiet"],
                 stdout=DEVNULL, stderr=DEVNULL, check=True)
             debug.log(
                 f"{debug.frmt.SUC}{req} installed successfully", debug.frmt.RST)
@@ -126,7 +132,7 @@ else:
         except Exception as e:
             debug.error(
                 f"Failed to install {req}: {e}. Please install {req} manually: {debug.frmt.MAG}pip install {req}{debug.frmt.RST}")
-            break
+            continue
     if installed == to_install:
         debug.log(debug.frmt.SUC + "All requirements installed" + debug.frmt.RST)
     else:
@@ -200,7 +206,7 @@ except Exception as e:
     debug.exception(f"Failed to initialize Stockfish: {e}")
     CTkMessagebox(
         title="Chess.py Setup Error",
-        message=f"Failed to setup chess.py: Failed to initialize Chess Engine at {os.path.join(root, "engine")} ({e})",
+        message=f"Failed to setup chess.py: Failed to initialize Chess Engine at {os.path.join(root, 'engine')} ({e})",
         icon="cancel",
         option_1="OK"
     )
@@ -218,7 +224,8 @@ if not os.path.exists(os.path.join(os.path.expanduser("~"), "Desktop", "Chess.py
     if createShortcut:
         debug.log("Creating shortcut on desktop...")
         try:
-            run("python desktop.pyw", check=True)
+            run([sys.executable, "-m", "python",
+                os.path.join(os.getcwd(), "desktop.pyw")], check=True)
         except Exception as e:
             debug.error(f"Failed to create shortcut: {e}")
             CTkMessagebox(
