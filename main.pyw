@@ -1,16 +1,15 @@
 import os
 import chess
+import pygame
 import stockfish
 import subprocess
-from CTkMessagebox import CTkMessagebox
+from CTkMessagebox import CTkMessagebox as ctkmbox
 from customtkinter import *  # type: ignore (ignores wildcard import warning)
 from debug import *
 from itertools import product
 from PIL import Image, ImageTk
+from typing import Dict, Literal, Optional
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
-from pygame import *  # type: ignore (ignores wildcard import warning)
-from tkinter import messagebox
-from typing import Dict, Literal
 
 
 class IllegalMoveError(Exception):
@@ -57,6 +56,7 @@ class ChessBoard:
         black_hex: str = "#d28c45",
         show: bool = True,
         draw_immediate: bool = False,
+        sound: bool = True,
     ):
         self.root = root
         self.canvas = CTkCanvas(
@@ -121,6 +121,8 @@ class ChessBoard:
         else:
             self.shown = False
 
+        self.sound = sound
+
     def highlight_square(self, square: str) -> None:
         """Highlights a square with a yellow overlay if it belongs to the current player.
 
@@ -180,8 +182,7 @@ class ChessBoard:
         """Disables square highlighting."""
         self.canvas.unbind("<Button-1>")
         self.canvas.delete("highlight")
-        
-        
+
     def get_possible_moves(self, square: str) -> list[str]:
         """Returns a list of possible moves for the piece on the given square.
 
@@ -199,31 +200,65 @@ class ChessBoard:
 
         if piece is None or (self.isWhiteTurn() != piece.color):
             return []
-        
-        legal_moves = [move.uci() for move in self.board.legal_moves if move.from_square == piece_square]
+
+        legal_moves = [
+            move.uci() for move in self.board.legal_moves if move.from_square == piece_square]
         return legal_moves
-    
-    def move_piece(self, from_square: str, to_square: str) -> None:
-        """Moves a piece from one square to another.
+
+    def move_piece(self, from_square: str, to_square: str, promotion: Optional[str] = None) -> None:
+        """Moves a piece from one square to another, with optional promotion.
 
         Args:
-            from_square (str): The square to move the piece from (e.g., "e4").
-            to_square (str): The square to move the piece to (e.g., "e5").
+            from_square (str): The square to move the piece from (e.g., "e7").
+            to_square (str): The square to move the piece to (e.g., "e8").
+            promotion (str, optional): Piece to promote to ('q', 'r', 'b', 'n'). Defaults to None.
 
         Raises:
-            IllegalMoveError: If the move is illegal.
-            InvalidMoveError: If the move is invalid.
+            IllegalMoveError: If the given move is illegal.
+            InvalidMoveError: If the given move is invalid.
         """
         if from_square not in self.coords or to_square not in self.coords:
             raise ValueError(f"Invalid square: {from_square} or {to_square}")
 
-        move = chess.Move.from_uci(f"{from_square.lower()}{to_square.lower()}")
+        move_str = f"{from_square.lower()}{to_square.lower()}"
+        # Handle promotion
+        if promotion:
+            if promotion.lower() not in ["q", "r", "b", "n"]:
+                raise InvalidMoveError(f"Invalid promotion piece: {promotion}")
+            move_str += promotion.lower()
+
+        try:
+            move = chess.Move.from_uci(move_str)
+        except ValueError:
+            raise InvalidMoveError(f"Invalid move: {move_str}")
+
         if move in self.board.legal_moves:
+            if self.sound:
+                testBoard = self.board.copy()
+                testBoard.push(move)
+                fn = []
+                if testBoard.is_game_over():
+                    fn.append("game_end")
+                elif testBoard.is_check():
+                    fn.append("check")
+                elif self.board.is_capture(move):
+                    fn.append("capture")
+                elif self.board.is_castling(move):
+                    fn.append("castle")
+                elif move.promotion:
+                    fn.append("promote")
+                else:
+                    fn.append("move")
+
+                fp = os.path.join(self.assets_path, "sounds", fn[0] + ".ogg")
+                playSound(fp)
+                del testBoard
+
             self.board.push(move)
             self.engine.make_moves_from_current_position([move.uci()])
             self.update()
         else:
-            raise IllegalMoveError(f"Illegal move: {from_square} to {to_square}")
+            raise IllegalMoveError(f"Illegal move: {move.uci()}")
 
     def __fetch_img_assets(self) -> Dict[str, ImageTk.PhotoImage]:
         """Fetches the image assets for the chess pieces.
@@ -516,17 +551,30 @@ class ChessBoard:
         self.update()
 
 
+def playSound(fp: os.PathLike | str, block: bool = True) -> None:
+    if not os.path.exists(fp):
+        raise FileNotFoundError(
+            f"File '{os.path.basename(fp)}' does not exist at '{fp}'")
+    pygame.mixer.pre_init(44100, -16, 2, 2048)
+    pygame.init()
+    pygame.mixer.init()
+    pygame.mixer.music.load(fp)
+    pygame.mixer.music.play()
+    if block:
+        pygame.event.wait()
+
+
 def close(app: CTk) -> None:
     """Quits the application after prompting the user."""
-    msg = CTkMessagebox(master=app,
-                        title="Really Quit?",
-                        message="Do you really want to quit Chess.py? Any unsaved progress will be lost.",
-                        icon="question",
-                        option_1="Cancel",
-                        option_2="Quit",
-                        sound=True,
-                        topmost=True,
-                        option_focus=1)
+    msg = ctkmbox(master=app,
+                  title="Really Quit?",
+                  message="Do you really want to quit Chess.py? Any unsaved progress will be lost.",
+                  icon="question",
+                  option_1="Cancel",
+                  option_2="Quit",
+                  sound=True,
+                  topmost=True,
+                  option_focus=1)
     if msg.get() == "Quit":
         os.remove("RUN.tmp")
         app.destroy()
@@ -540,7 +588,7 @@ def main():
     log("Checking for running instance...")
     if os.path.exists("RUN.tmp"):
         error("Chess.py is already running")
-        CTkMessagebox(title="Chess.py Error",
+        ctkmbox(title="Chess.py Error",
                       message="Chess.py is already running. Please close the other instance before running a new one.",
                       icon="cancel",
                       option_1="OK")
@@ -575,7 +623,6 @@ def main():
     #    tabview.add("Play")
         tabview.add("Settings")
 
-
         quit_button = CTkButton(tabview.tab("Settings"),
                                 text="Quit", command=lambda: close(app), fg_color="red", hover_color="darkred")
         quit_button.pack(pady=10, padx=10)
@@ -600,8 +647,8 @@ def main():
         close(app)
     except Exception as e:
         exception(f"chess.py closed tue to unexpected error: {e}")
-        messagebox.showerror(
-            title="Chess.py Error", message=f"Chess.py closed due to an unexpected error: {e}", icon=messagebox.ERROR, type=messagebox.OK)
+        ctkmbox(title="Chess.py Error",
+                message=f"Chess.py closed due to an unexpected error: {e}", icon="Error")
         close(app)
 
 
