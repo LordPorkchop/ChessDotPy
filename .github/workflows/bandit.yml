@@ -34,7 +34,7 @@ jobs:
           output_file: bandit-output.json
           excluded_paths: engine
       - name: Upload Bandit Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bandit-report
           path: bandit-output.json
