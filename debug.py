@@ -73,6 +73,11 @@ def finish() -> None:
     print(f"{frmt.SUC}FINISHED{frmt.STD} in {get_timestamp()} with\n\t{frmt.SUC if EXCEPTIONS == 0 else frmt.FAIL}{EXCEPTIONS}{frmt.STD} exceptions,\n\t{frmt.SUC if ERRORS == 0 else frmt.FAIL}{ERRORS}{frmt.STD} errors,\n\t{frmt.SUC if WARNINGS == 0 else frmt.YEL}{WARNINGS}{frmt.STD} warnings,\n\t{DEBUGS} debug messages and\n\t{LOGS} log messages.")
 
 
+def crash() -> None:
+    global ERRORS, WARNINGS, EXCEPTIONS, DEBUGS, LOGS
+    print(f"{frmt.FAIL}CRASHED{frmt.STD} after {get_timestamp()} with\n\t{frmt.SUC if EXCEPTIONS == 0 else frmt.FAIL}{EXCEPTIONS}{frmt.STD} exceptions,\n\t{frmt.SUC if ERRORS == 0 else frmt.FAIL}{ERRORS}{frmt.STD} errors,\n\t{frmt.SUC if WARNINGS == 0 else frmt.YEL}{WARNINGS}{frmt.STD} warnings,\n\t{DEBUGS} debug messages and\n\t{LOGS} log messages.")
+
+
 if __name__ == "__main__":
     # Example usage of the functions
     print("Usage example:")

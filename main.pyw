@@ -4,6 +4,7 @@ import os
 import pygame
 import stockfish
 import subprocess
+import traceback
 import CTkMessagebox as ctkmbox
 import customtkinter as ctk
 from itertools import product
@@ -645,13 +646,22 @@ def main():
 
         app.mainloop()
     except KeyboardInterrupt:
-        debug.log("chess.py closed due to KeyboardInterrupt (CTRL+C)")
-        close(app)
+        debug.exception("chess.py closed due to KeyboardInterrupt in terminal")
+        debug.crash()
+        app.destroy()
+        os.remove("RUN.tmp")
+        exit(1)
     except Exception as e:
         debug.exception(f"chess.py closed tue to unexpected error: {e}")
         ctkmbox.CTkMessagebox(title="Chess.py Error",
                               message=f"Chess.py closed due to an unexpected error: {e}", icon="Error")
-        close(app)
+        debug.crash()
+        app.destroy()
+        try:
+            os.remove("RUN.tmp")
+        except FileNotFoundError:
+            pass
+        exit(1)
 
 
 if __name__ == "__main__":
@@ -659,6 +669,12 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         debug.exception(str(e))
+        debug.crash()
+        try:
+            os.remove("RUN.tmp")
+        except FileNotFoundError:
+            pass
+        exit(1)
 else:
     raise ImportError(
         "This file is designed to be run standalone")

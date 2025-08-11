@@ -54,7 +54,7 @@ def create_shortcut_linux():
         with open(path, "w") as f:
             f.write(desktop_content)
         st = os.stat(path)
-        os.chmod(path, st.st_mode | stat.S_IEXEC)
+        os.chmod(path, st.st_mode | stat.S_IEXEC)  # type: ignore
 
     write_shortcut(app_shortcut_path)
     write_shortcut(desktop_shortcut_path)
@@ -79,9 +79,9 @@ def create_shortcut_mac():
         "CFBundleIconFile": os.path.basename(icon_path)
     }
     with open(os.path.join(contents_dir, "Info.plist"), "wb") as f:
-        plistlib.dump(plist, f)
+        plistlib.dump(plist, f)  # type: ignore
 
-    subprocess.run(["cp", icon_path, os.path.join(
+    subprocess.run(["cp", icon_path, os.path.join(  # type: ignore
         resources_dir, os.path.basename(icon_path))])
 
     run_script_path = os.path.join(macos_dir, "runscript")
@@ -91,7 +91,7 @@ def create_shortcut_mac():
         f.write(script_content)
 
     st = os.stat(run_script_path)
-    os.chmod(run_script_path, st.st_mode | stat.S_IEXEC)
+    os.chmod(run_script_path, st.st_mode | stat.S_IEXEC)  # type: ignore
 
 
 if __name__ == "__main__":
