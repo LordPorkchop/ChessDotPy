@@ -5,7 +5,7 @@ if sys.platform == "win32":
     from win32com.client import Dispatch
 elif sys.platform == "linux":
     import stat
-elif sys.platform == "mac":
+elif sys.platform == "darwin":
     import stat
     import plistlib
     import subprocess
@@ -100,5 +100,5 @@ if __name__ == "__main__":
             create_shortcut_windows()
         case "linux":
             create_shortcut_linux()
-        case "mac":
+        case "darwin":
             create_shortcut_mac()
