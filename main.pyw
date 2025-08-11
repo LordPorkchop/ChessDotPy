@@ -1,11 +1,11 @@
+import customtkinter as ctk
+import debug
 import os
 import chess
 import pygame
 import stockfish
 import subprocess
 from CTkMessagebox import CTkMessagebox as ctkmbox
-from customtkinter import *  # type: ignore (ignores wildcard import warning)
-from debug import *
 from itertools import product
 from PIL import Image, ImageTk
 from typing import Dict, Literal, Optional
@@ -47,7 +47,7 @@ class ChessEngine(stockfish.Stockfish):
 class ChessBoard:
     def __init__(
         self,
-        root: CTk | CTkFrame,
+        root: ctk.CTk | ctk.CTkFrame,
         asset_location: str,
         engine_location: str,
         tile_size: int = 60,
@@ -59,7 +59,7 @@ class ChessBoard:
         sound: bool = True,
     ):
         self.root = root
-        self.canvas = CTkCanvas(
+        self.canvas = ctk.CTkCanvas(
             self.root, width=8*tile_size, height=8*tile_size)
 
         if os.path.exists(asset_location):
@@ -166,8 +166,8 @@ class ChessBoard:
         square = f"{self.cols[col]}{self.rows[row]}"
         piece = self.board.piece_at(chess.parse_square(square.lower()))
         piece_color = piece.color if piece else None
-        debug(f"""{square}: {self.piece_names[str(piece)] if piece else "Empty"}{f" [{'W' if self.isWhiteTurn() else 'B'}]" if piece else ""}: {
-              "Yes" if (self.board.turn == piece_color) else "No"}""")
+        debug.debug(f"""{square}: {self.piece_names[str(piece)] if piece else "Empty"}{f" [{'W' if self.isWhiteTurn() else 'B'}]" if piece else ""}: {
+            "Yes" if (self.board.turn == piece_color) else "No"}""")
         if (self.isWhiteTurn() == piece_color):
             self.canvas.delete("highlight")
             if square.lower != self._highlighted_square:
@@ -564,7 +564,7 @@ def playSound(fp: os.PathLike | str, block: bool = True) -> None:
         pygame.event.wait()
 
 
-def close(app: CTk) -> None:
+def close(app: ctk.CTk) -> None:
     """Quits the application after prompting the user."""
     msg = ctkmbox(master=app,
                   title="Really Quit?",
@@ -578,16 +578,16 @@ def close(app: CTk) -> None:
     if msg.get() == "Quit":
         os.remove("RUN.tmp")
         app.destroy()
-        finish()
+        debug.finish()
         exit(0)
 
 
 def main():
     """Main function to run the chessboard application."""
-    log("Running Chess.py")
-    log("Checking for running instance...")
+    debug.log("Running Chess.py")
+    debug.log("Checking for running instance...")
     if os.path.exists("RUN.tmp"):
-        error("Chess.py is already running")
+        debug.error("Chess.py is already running")
         ctkmbox(title="Chess.py Error",
                       message="Chess.py is already running. Please close the other instance before running a new one.",
                       icon="cancel",
@@ -596,15 +596,15 @@ def main():
     else:
         open("RUN.tmp", "w").close()
 
-    app = CTk()  # Initialize the main application window
+    app = ctk.CTk()  # Initialize the main application window
     try:
         __assets__ = os.path.join(os.path.dirname(__file__), "assets")
         __engine__ = os.path.join(os.path.dirname(
             __file__), "engine", "stockfish-windows-x86-64-avx2.exe")
         # Set the appearance mode to system default
-        set_appearance_mode("system")
+        ctk.set_appearance_mode("system")
         # Set the default color theme to green
-        set_default_color_theme("green")
+        ctk.set_default_color_theme("green")
         app.title("Chess.py")  # Set the title of the application window
         # Set the icon of the application window
         app.iconbitmap(os.path.join(__assets__, "icon.ico"))
@@ -616,37 +616,37 @@ def main():
         app.protocol("WM_DELETE_WINDOW", lambda: close(app))
         app.protocol("WM_SAVE_YOURSELF", lambda: close(app))
 
-        tabview = CTkTabview(app, anchor="nw")  # Create a tabview widget
+        tabview = ctk.CTkTabview(app, anchor="nw")  # Create a tabview widget
         # Pack the tabview widget to fill the application window
         tabview.pack(expand=True, fill="both")
         tabview.add("Analyze")
     #    tabview.add("Play")
         tabview.add("Settings")
 
-        quit_button = CTkButton(tabview.tab("Settings"),
-                                text="Quit", command=lambda: close(app), fg_color="red", hover_color="darkred")
+        quit_button = ctk.CTkButton(tabview.tab("Settings"),
+                                    text="Quit", command=lambda: close(app), fg_color="red", hover_color="darkred")
         quit_button.pack(pady=10, padx=10)
 
         analyze_board = ChessBoard(tabview.tab("Analyze"), asset_location=__assets__,
                                    engine_location=__engine__, tile_size=60, start_flipped=False, show=True, draw_immediate=True)
         analyze_board.enable_highlighting()
 
-        pgnInput = CTkEntry(tabview.tab(
+        pgnInput = ctk.CTkEntry(tabview.tab(
             "Analyze"), placeholder_text="Paste PGN here...", placeholder_text_color="lightgray")
-        pgnSubmit = CTkButton(tabview.tab("Analyze"), text="Load")
+        pgnSubmit = ctk.CTkButton(tabview.tab("Analyze"), text="Load")
         pgnInput.pack(side="left", pady=10)
         pgnSubmit.pack(side="right", pady=10)
 
-        flip_button = CTkButton(tabview.tab(
+        flip_button = ctk.CTkButton(tabview.tab(
             "Analyze"), text="Flip Board", command=lambda: analyze_board.flip(draw_immediate=True))
         flip_button.pack(padx=5, pady=10)
 
         app.mainloop()
     except KeyboardInterrupt:
-        log("chess.py closed due to KeyboardInterrupt (CTRL+C)")
+        debug.log("chess.py closed due to KeyboardInterrupt (CTRL+C)")
         close(app)
     except Exception as e:
-        exception(f"chess.py closed tue to unexpected error: {e}")
+        debug.exception(f"chess.py closed tue to unexpected error: {e}")
         ctkmbox(title="Chess.py Error",
                 message=f"Chess.py closed due to an unexpected error: {e}", icon="Error")
         close(app)
@@ -656,7 +656,7 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        exception(str(e))
+        debug.exception(str(e))
 else:
     raise ImportError(
         "This file is designed to be run standalone")
