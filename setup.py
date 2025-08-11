@@ -1,4 +1,5 @@
 import importlib
+import json
 import debug
 import os
 import platform
@@ -212,32 +213,29 @@ except Exception as e:
     )
     exit(1)
 
-if not os.path.exists(os.path.join(os.path.expanduser("~"), "Desktop", "Chess.py.lnk")):
-    createShortcut = CTkMessagebox(
-        title="Chess.py Setup Complete",
-        message="Chess.py setup is complete. Do you want to create a shortcut on your desktop?",
-        icon="info",
-        option_1="Yes",
-        option_2="No",
-        option_focus=1
-    ).get() == "Yes"
-    if createShortcut:
-        debug.log("Creating shortcut on desktop...")
-        try:
-            run([sys.executable, "-m", "python",
-                os.path.join(os.getcwd(), "desktop.pyw")], check=True)
-        except Exception as e:
-            debug.error(f"Failed to create shortcut: {e}")
-            CTkMessagebox(
-                title="ChessDotPy Setup Error",
-                message=f"Failed to create shortcut: {e}",
-                icon="cancel",
-                option_1="OK"
-            )
-    else:
-        debug.log("Skipping shortcut creation after user prompt")
+createShortcut = CTkMessagebox(
+    title="Create desktop shortcut?",
+    message="Do you want to create a shortcut on your desktop?",
+    icon="question",
+    option_1="Yes",
+    option_2="No",
+    option_focus=1
+).get() == "Yes"
+if createShortcut:
+    debug.log("Creating shortcut on desktop...")
+    try:
+        run([sys.executable, "-m", "python",
+            os.path.join(os.getcwd(), "desktop.pyw")], check=True)
+    except Exception as e:
+        debug.error(f"Failed to create shortcut: {e}")
+        CTkMessagebox(
+            title="ChessDotPy Setup Error",
+            message=f"Failed to create shortcut: {e}",
+            icon="cancel",
+            option_1="OK"
+        )
 else:
-    debug.log("Skipping shortcut creation, as it already exists")
+    debug.log("Skipping shortcut creation after user prompt")
 
 
 CTkMessagebox(
