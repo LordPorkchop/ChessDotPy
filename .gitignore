@@ -1,2 +1,3 @@
-generate_version.py
+count_lines.py
+update_version.py
 __pycache__/
