@@ -12,7 +12,7 @@ elif sys.platform == "darwin":
 
 # Define paths
 target_path = os.path.join(os.getcwd(), "main.pyw")
-icon_path = os.path.join(os.getcwd(), "assets", "icon.ico")
+icon_path = os.path.join(os.getcwd(), "assets", "images", "icon.ico")
 python_path = os.path.realpath(sys.executable)
 
 

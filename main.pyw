@@ -276,7 +276,7 @@ class ChessBoard:
         for color in self.colors:
             for piece in self.pieces:
                 piece_img_paths[f"{color}{piece}"] = os.path.join(
-                    self.assets_path, "pieces", f"{color}{piece}.png")
+                    self.assets_path, "images", f"{color}{piece}.png")
 
         pieces = {}
         for piece in piece_img_paths.values():
@@ -610,7 +610,7 @@ def main():
         ctk.set_default_color_theme("green")
         app.title("Chess.py")  # Set the title of the application window
         # Set the icon of the application window
-        app.iconbitmap(os.path.join(__assets__, "icon.ico"))
+        app.iconbitmap(os.path.join(__assets__, "images", "icon.ico"))
         # Set the initial size of the application window
         app.geometry("500x700")
         # Allow the application window to be resizable
