@@ -11,7 +11,6 @@ permissions:
   contents: read
   security-events: write
   actions: read
-  issues: write
 
 jobs:
   bandit:
@@ -30,57 +29,9 @@ jobs:
         with:
           exit_zero: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          output_format: json
-          output_file: bandit-output.json
           excluded_paths: engine
       - name: Upload Bandit Report
         uses: actions/upload-artifact@v4
         with:
           name: bandit-report
           path: bandit-output.json
-
-  create_issues:
-    needs: bandit
-    runs-on: ubuntu-latest
-    permissions:
-      issues: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download Bandit Report
-        uses: actions/download-artifact@v3
-        with:
-          name: bandit-report
-          path: ./bandit
-      - name: Create GitHub issues for Bandit warnings or higher
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const data = JSON.parse(fs.readFileSync('./bandit/bandit-output.json', 'utf8'));
-      
-            const severityMap = { 'LOW': 1, 'MEDIUM': 2, 'HIGH': 3 };
-            const minSeverity = severityMap['MEDIUM'];  // WARNING or higher
-      
-            for (const result of data.results) {
-              const severity = result.issue_severity.toUpperCase();
-              if (severityMap[severity] >= minSeverity) {
-                const title = `[Bandit][${severity}] ${result.test_id} in ${result.filename}:${result.line_number}`;
-                const body =
-                  "**Issue:** " + result.test_name + "\n" +
-                  "**Severity:** " + severity + "\n" +
-                  "**Confidence:** " + result.issue_confidence + "\n" +
-                  "**File:** " + result.filename + "\n" +
-                  "**Line:** " + result.line_number + "\n\n" +
-                  "**Details:**\n" + result.issue_text + "\n\n" +
-                  "**More info:** " + result.more_info;
-      
-                await github.rest.issues.create({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  title,
-                  body,
-                  labels: ['security', 'bandit'],
-                });
-              }
-            }
