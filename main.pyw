@@ -1,14 +1,16 @@
-import customtkinter as ctk
+import chess
 import debug
 import os
-import chess
 import pygame
 import stockfish
 import subprocess
-from CTkMessagebox import CTkMessagebox as ctkmbox
+import CTkMessagebox as ctkmbox
+import customtkinter as ctk
 from itertools import product
 from PIL import Image, ImageTk
 from typing import Dict, Literal, Optional
+
+# Hides annoying Hello from pygame
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
 
@@ -566,15 +568,15 @@ def playSound(fp: os.PathLike | str, block: bool = True) -> None:
 
 def close(app: ctk.CTk) -> None:
     """Quits the application after prompting the user."""
-    msg = ctkmbox(master=app,
-                  title="Really Quit?",
-                  message="Do you really want to quit Chess.py? Any unsaved progress will be lost.",
-                  icon="question",
-                  option_1="Cancel",
-                  option_2="Quit",
-                  sound=True,
-                  topmost=True,
-                  option_focus=1)
+    msg = ctkmbox.CTkMessagebox(master=app,
+                                title="Really Quit?",
+                                message="Do you really want to quit Chess.py? Any unsaved progress will be lost.",
+                                icon="question",
+                                option_1="Cancel",
+                                option_2="Quit",
+                                sound=True,
+                                topmost=True,
+                                option_focus=1)
     if msg.get() == "Quit":
         os.remove("RUN.tmp")
         app.destroy()
@@ -588,10 +590,10 @@ def main():
     debug.log("Checking for running instance...")
     if os.path.exists("RUN.tmp"):
         debug.error("Chess.py is already running")
-        ctkmbox(title="Chess.py Error",
-                      message="Chess.py is already running. Please close the other instance before running a new one.",
-                      icon="cancel",
-                      option_1="OK")
+        ctkmbox.CTkMessagebox(title="Chess.py Error",
+                              message="Chess.py is already running. Please close the other instance before running a new one.",
+                              icon="cancel",
+                              option_1="OK")
         exit(1)
     else:
         open("RUN.tmp", "w").close()
@@ -647,8 +649,8 @@ def main():
         close(app)
     except Exception as e:
         debug.exception(f"chess.py closed tue to unexpected error: {e}")
-        ctkmbox(title="Chess.py Error",
-                message=f"Chess.py closed due to an unexpected error: {e}", icon="Error")
+        ctkmbox.CTkMessagebox(title="Chess.py Error",
+                              message=f"Chess.py closed due to an unexpected error: {e}", icon="Error")
         close(app)
 
 
