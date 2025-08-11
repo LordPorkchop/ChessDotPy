@@ -28,7 +28,8 @@ def get_version():
 def get_latest_version() -> str | None:
     try:
         response = requests.get(
-            "https://raw.githubusercontent.com/LordPorkchop/ChessDotPy/refs/heads/main/version.py")
+            "https://raw.githubusercontent.com/LordPorkchop/ChessDotPy/refs/heads/main/version.py",
+            timeout=20)
         if response.status_code == 200:
             for line in response.text.splitlines():
                 if line.startswith("__version__"):
