@@ -1,0 +1,37 @@
+name: Bandit
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '0 0 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  bandit:
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    runs-on: ubuntu-latest
+    outputs:
+      report_path: bandit-output.json
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bandit Scan
+        id: bandit_scan
+        uses: shundor/python-bandit-scan@ab1d87dfccc5a0ffab88be3aaac6ffe35c10d6cd
+        with:
+          exit_zero: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          excluded_paths: engine
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit-output.json
