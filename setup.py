@@ -195,9 +195,9 @@ if not os.path.exists(os.path.join(root, "LICENSE.md")):
         f"The license file does not exist, likely indicating a non-official installation. Please install ChessDotPy for free from the official GitHub repository: {debug.frmt.MAG}https://github.com/LordPorkchop/chessdotpy {debug.frmt.RST}")
     exit(1)
 
-if not os.path.exists(os.path.join(root, "CITATION.cff")):
+if not os.path.exists(os.path.join(root, "CITATIONS.md")):
     debug.exception(
-        f"The citation file does not exist, likely indicating a non-official installation. Please install ChessDotPy for free from the official GitHub repository: {debug.frmt.MAG}https://github.com/LordPorkchop/chessdotpy {debug.frmt.RST}")
+        f"The citations file does not exist, likely indicating a non-official installation. Please install ChessDotPy for free from the official GitHub repository: {debug.frmt.MAG}https://github.com/LordPorkchop/chessdotpy {debug.frmt.RST}")
     exit(1)
 
 try:
@@ -241,9 +241,25 @@ else:
 
 CTkMessagebox(
     title="ChessDotPy Setup Complete",
-    message="ChessDotPy setup is complete. Please run the program to start playing chess.",
+    message="ChessDotPy setup is complete. Run the program to start playing chess.",
     icon="check",
     option_1="OK"
 )
-debug.log(debug.frmt.SUC + "ChessDotPy Setup complete" + debug.frmt.RST)
+debug.log("Cleaning up:")
+debug.log("Removing files...")
+root_path = os.getcwd()
+to_remove = [
+    "requirements.txt",
+    ".gitignore",
+    ".gitattributes",
+    "desktop.pyw"
+]
+for file in to_remove:
+    path = os.path.join(root_path, file)
+    try:
+        os.remove(os.path.join(root_path, file))
+    except Exception as e:
+        debug.error(f"Error while removing {file}: {e}")
+    else:
+        debug.log(f"Successfully removed {file}")
 debug.finish()

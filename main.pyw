@@ -126,11 +126,12 @@ class ChessBoard:
 
         self.sound = sound
 
-    def highlight_square(self, square: str) -> None:
-        """Highlights a square with a yellow overlay if it belongs to the current player.
+    def highlight_square(self, square: str, color: str = "yellow") -> None:
+        """Highlights a square with a colored overlay if it belongs to the current player.
 
         Args:
             square (str): The square to highlight (e.g., "e4").
+            color (str): The color to highlight the square in. Defaults to "yellow".
         """
         if square not in self.coords:
             raise ValueError(f"Invalid square: {square}")
@@ -148,7 +149,7 @@ class ChessBoard:
             x2, y2 = x1 + self.tile_size, y1 + self.tile_size
 
             self.canvas.create_rectangle(
-                x1, y1, x2, y2, fill="yellow", outline="", stipple="gray50", tags="highlight")
+                x1, y1, x2, y2, fill=color, outline="", stipple="gray50", tags="highlight")
             # Send the highlight rectangle to the back
             self.canvas.tag_lower("highlight", "piece")
 
@@ -301,6 +302,7 @@ class ChessBoard:
         self.board.apply_transform(chess.flip_horizontal)
         if draw_immediate:
             self.draw()
+        debug.debug("Flipped board")
 
     def draw(self):
         """Draws the chessboard and pieces on the canvas."""
