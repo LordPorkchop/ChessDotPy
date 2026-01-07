@@ -7,3 +7,4 @@ pygame
 pywin32; sys_platform == "win32"
 requests
 stockfish
+urllib3 == 2.6.0
